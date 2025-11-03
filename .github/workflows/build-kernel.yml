@@ -1200,40 +1200,40 @@ EOF
 SUMMARYEOF
           
           cat >> $GITHUB_STEP_SUMMARY << EOF
-- **Artifact:** \`CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}\`
+- **Artifact:** `CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}`
 - **Size:** ~50-80 MB
 - **Contains:** bzImage, modules, SUSFS, scripts
 
 ### 2️⃣ Modified Source Tree (For Custom Builds)
-- **Artifact:** \`ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}\`
+- **Artifact:** `ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}`
 - **Size:** ${{ env.ARCHIVE_SIZE }}
 - **Contains:** Complete kernel source with patches applied
 
 ### 3️⃣ Complete Combined Package
-- **Artifact:** \`COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}\`
+- **Artifact:** `COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}`
 - **Contains:** Both compiled kernel + source tree
 
 ## ✨ Build Configuration
 
 | Setting | Value |
 |---------|-------|
-| Kernel Branch | \`${{ github.event.inputs.KERNEL_BRANCH }}\` |
-| Android Version | \`${{ github.event.inputs.ANDROID_VERSION }}\` |
-| KSU Version | \`${{ env.KSUVER }}\` |
+| Kernel Branch | `${{ github.event.inputs.KERNEL_BRANCH }}` |
+| Android Version | `${{ github.event.inputs.ANDROID_VERSION }}` |
+| KSU Version | `${{ env.KSUVER }}` |
 | VFS Hooks | ${{ github.event.inputs.VFS == 'true' && '✅' || '❌' }} |
 | KPM | ${{ github.event.inputs.KPM == 'true' && '✅' || '❌' }} |
 | ZRAM | ${{ github.event.inputs.ZRAM == 'true' && '✅' || '❌' }} |
-| Build Time | ${{ env.BUILD_TIME }}s ($((${{ env.BUILD_TIME }} / 60))m) |
+| Build Time | `${{ env.BUILD_TIME }}s` |
 
 ## 🎯 Quick Download
 
-\`\`\`bash
+```bash
 # Download all artifacts
 gh run download ${{ github.run_id }}
 
 # Or download specific artifact:
 gh run download ${{ github.run_id }} -n COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
-\`\`\`
+```
 
 ## 📊 Build Statistics
 
