@@ -49,13 +49,41 @@ function check_command() {
 }
 
 
+function check_and_perform_auth() {
+  # Check if already authenticated
+  if gh auth status &>/dev/null; then
+    echo "✅ 'gh' is already authenticated."
+    return
+  fi
+
+  # Not authenticated, attempt to log in
+  echo "🤔 'gh' is not authenticated. Starting login process..."
+  echo "   Your web browser will open for you to log in."
+  
+  if gh auth login; then
+    echo "✅ Successfully authenticated with GitHub."
+  else
+    echo "❌ Authentication failed. Please try again."
+    exit 1
+  fi
+
+  # Final check to be sure
+  if ! gh auth status &>/dev/null; then
+    echo "❌ Authentication status could not be verified after login. Exiting."
+    exit 1
+  fi
+}
+
+
 # --- Main Script ---
 
-# 1. Check for dependencies
+# 1. Check for dependencies and authentication
 echo "🔍 Checking for required tools (git, gh)..."
 check_command "git"
 check_or_install_gh
-echo "✅ Dependencies satisfied."
+echo "🔐 Checking GitHub authentication..."
+check_and_perform_auth
+echo "✅ Dependencies and authentication are satisfied."
 
 # 2. Check if source file exists
 if [ ! -f "$SOURCE_WORKFLOW_FILE" ]; then
