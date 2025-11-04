@@ -129,7 +129,9 @@ jobs:
           echo "✅ Kernel package prepared"
           
       - name: Upload kernel package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kernel-package
           path: dist/ChromeOS-ARCVM-x86_64-SukiSU-Ultra-Kernel.zip
+          compression-level: 9
+          retention-days: 90

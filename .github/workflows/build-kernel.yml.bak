@@ -260,12 +260,16 @@ jobs:
           
       - name: Upload kernel package
       - name: Upload kernel package
-        uses: actions/upload-artifact@v3
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
         with:
         with:
           name: kernel-package
           name: kernel-package
           path: dist/ChromeOS-ARCVM-x86_64-SukiSU-Ultra-Kernel.zip
           path: dist/ChromeOS-ARCVM-x86_64-SukiSU-Ultra-Kernel.zip
+          compression-level: 9
+          compression-level: 9
+          retention-days: 90
+          retention-days: 90
 
