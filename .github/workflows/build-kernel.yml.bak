@@ -156,32 +156,60 @@ jobs:
           cd kernel
           
           
-      - name: Clone SUSFS Repository
-      - name: Clone SUSFS Repository
-        uses: actions/checkout@v4
-        uses: actions/checkout@v4
-        with:
-        with:
-          repository: HuskyDG/susfs4ksu
-          repository: HuskyDG/susfs4ksu
-          path: susfs4ksu
-          path: susfs4ksu
-          fetch-depth: 1
-          fetch-depth: 1
+      - name: Clone SUSFS and Patch Repositories
+      - name: Clone SUSFS and Patch Repositories
+        env:
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+        run: |
+          echo "📥 Cloning SUSFS and patch repositories..."
+          echo "📥 Cloning SUSFS and patch repositories..."
           
           
-      - name: Clone SukiSU Patch Repository
-      - name: Clone SukiSU Patch Repository
-        uses: actions/checkout@v4
-        uses: actions/checkout@v4
-        with:
-        with:
-          repository: ShirkNeko/SukiSU_patch
-          repository: ShirkNeko/SukiSU_patch
-          path: SukiSU_patch
-          path: SukiSU_patch
-          fetch-depth: 1
-          fetch-depth: 1
+          # Try multiple methods to clone SUSFS repository
+          # Try multiple methods to clone SUSFS repository
+          git clone https://${GH_TOKEN}@github.com/HuskyDG/susfs4ksu.git --depth=1 || \
+          git clone https://${GH_TOKEN}@github.com/HuskyDG/susfs4ksu.git --depth=1 || \
+          git clone https://github.com/HuskyDG/susfs4ksu.git --depth=1 || \
+          git clone https://github.com/HuskyDG/susfs4ksu.git --depth=1 || \
+          git clone git://github.com/HuskyDG/susfs4ksu.git --depth=1 || \
+          git clone git://github.com/HuskyDG/susfs4ksu.git --depth=1 || \
+          wget https://github.com/HuskyDG/susfs4ksu/archive/refs/heads/main.zip -O susfs4ksu.zip && \
+          wget https://github.com/HuskyDG/susfs4ksu/archive/refs/heads/main.zip -O susfs4ksu.zip && \
+          unzip susfs4ksu.zip && mv susfs4ksu-main susfs4ksu
+          unzip susfs4ksu.zip && mv susfs4ksu-main susfs4ksu
+          
+          
+          # Try multiple methods to clone SukiSU patch repository
+          # Try multiple methods to clone SukiSU patch repository
+          git clone https://${GH_TOKEN}@github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
+          git clone https://${GH_TOKEN}@github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
+          git clone git://github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
+          git clone git://github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
+          wget https://github.com/ShirkNeko/SukiSU_patch/archive/refs/heads/main.zip -O sukisu_patch.zip && \
+          wget https://github.com/ShirkNeko/SukiSU_patch/archive/refs/heads/main.zip -O sukisu_patch.zip && \
+          unzip sukisu_patch.zip && mv SukiSU_patch-main SukiSU_patch
+          unzip sukisu_patch.zip && mv SukiSU_patch-main SukiSU_patch
+          
+          
+          # Check if repositories were cloned successfully
+          # Check if repositories were cloned successfully
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+          echo "❌ Failed to clone required repositories"
+          echo "❌ Failed to clone required repositories"
+          exit 1
+          exit 1
+          fi
+          fi
+          
+          
+          echo "✅ Successfully cloned required repositories"
+          echo "✅ Successfully cloned required repositories"
 
 
       - name: Apply SUSFS Patches to ChromeOS Kernel
