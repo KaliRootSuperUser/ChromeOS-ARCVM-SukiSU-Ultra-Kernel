@@ -1,0 +1,3120 @@
+name: Build ChromeOS_ARCVM_SukiSU_Ultra_x86_64
+name: Build ChromeOS_ARCVM_SukiSU_Ultra_x86_64
+name: Build ChromeOS_ARCVM_SukiSU_Ultra_x86_64
+name: Build ChromeOS_ARCVM_SukiSU_Ultra_x86_64
+
+
+
+
+on:
+on:
+on:
+on:
+  workflow_dispatch:
+  workflow_dispatch:
+  workflow_dispatch:
+  workflow_dispatch:
+    inputs:
+    inputs:
+    inputs:
+    inputs:
+      KERNEL_BRANCH:
+      KERNEL_BRANCH:
+      KERNEL_BRANCH:
+      KERNEL_BRANCH:
+        type: choice
+        type: choice
+        type: choice
+        type: choice
+        description: "ChromeOS Kernel Branch"
+        description: "ChromeOS Kernel Branch"
+        description: "ChromeOS Kernel Branch"
+        description: "ChromeOS Kernel Branch"
+        required: true
+        required: true
+        required: true
+        required: true
+        default: chromeos-5.10-arcvm
+        default: chromeos-5.10-arcvm
+        default: chromeos-5.10-arcvm
+        default: chromeos-5.10-arcvm
+        options:
+        options:
+        options:
+        options:
+          - chromeos-5.10-arcvm
+          - chromeos-5.10-arcvm
+          - chromeos-5.10-arcvm
+          - chromeos-5.10-arcvm
+          - chromeos-5.15-arcvm
+          - chromeos-5.15-arcvm
+          - chromeos-5.15-arcvm
+          - chromeos-5.15-arcvm
+          - chromeos-6.1-arcvm
+          - chromeos-6.1-arcvm
+          - chromeos-6.1-arcvm
+          - chromeos-6.1-arcvm
+          - chromeos-6.6-arcvm
+          - chromeos-6.6-arcvm
+          - chromeos-6.6-arcvm
+          - chromeos-6.6-arcvm
+      ANDROID_VERSION:
+      ANDROID_VERSION:
+      ANDROID_VERSION:
+      ANDROID_VERSION:
+        type: choice
+        type: choice
+        type: choice
+        type: choice
+        description: "Target Android Version"
+        description: "Target Android Version"
+        description: "Target Android Version"
+        description: "Target Android Version"
+        required: true
+        required: true
+        required: true
+        required: true
+        default: android13
+        default: android13
+        default: android13
+        default: android13
+        options:
+        options:
+        options:
+        options:
+          - android12
+          - android12
+          - android12
+          - android12
+          - android13
+          - android13
+          - android13
+          - android13
+          - android14
+          - android14
+          - android14
+          - android14
+          - android15
+          - android15
+          - android15
+          - android15
+      KERNEL_VERSION:
+      KERNEL_VERSION:
+      KERNEL_VERSION:
+      KERNEL_VERSION:
+        type: choice
+        type: choice
+        type: choice
+        type: choice
+        description: "Kernel Version"
+        description: "Kernel Version"
+        description: "Kernel Version"
+        description: "Kernel Version"
+        required: true
+        required: true
+        required: true
+        required: true
+        default: "5.10"
+        default: "5.10"
+        default: "5.10"
+        default: "5.10"
+        options:
+        options:
+        options:
+        options:
+          - "5.10"
+          - "5.10"
+          - "5.10"
+          - "5.10"
+          - "5.15"
+          - "5.15"
+          - "5.15"
+          - "5.15"
+          - "6.1"
+          - "6.1"
+          - "6.1"
+          - "6.1"
+          - "6.6"
+          - "6.6"
+          - "6.6"
+          - "6.6"
+      SUSFS_CI:
+      SUSFS_CI:
+      SUSFS_CI:
+      SUSFS_CI:
+        type: boolean
+        type: boolean
+        type: boolean
+        type: boolean
+        description: "Use CI build when downloading SUSFS module?"
+        description: "Use CI build when downloading SUSFS module?"
+        description: "Use CI build when downloading SUSFS module?"
+        description: "Use CI build when downloading SUSFS module?"
+        required: true
+        required: true
+        required: true
+        required: true
+        default: true
+        default: true
+        default: true
+        default: true
+      VFS:
+      VFS:
+      VFS:
+      VFS:
+        type: boolean
+        type: boolean
+        type: boolean
+        type: boolean
+        description: "Enable manual hooks?"
+        description: "Enable manual hooks?"
+        description: "Enable manual hooks?"
+        description: "Enable manual hooks?"
+        required: true
+        required: true
+        required: true
+        required: true
+        default: true
+        default: true
+        default: true
+        default: true
+      KPM:
+      KPM:
+      KPM:
+      KPM:
+        type: boolean
+        type: boolean
+        type: boolean
+        type: boolean
+        description: "Enable KPM?"
+        description: "Enable KPM?"
+        description: "Enable KPM?"
+        description: "Enable KPM?"
+        required: true
+        required: true
+        required: true
+        required: true
+        default: true
+        default: true
+        default: true
+        default: true
+      ZRAM:
+      ZRAM:
+      ZRAM:
+      ZRAM:
+        type: boolean
+        type: boolean
+        type: boolean
+        type: boolean
+        description: "Enable adding more ZRAM algorithms?"
+        description: "Enable adding more ZRAM algorithms?"
+        description: "Enable adding more ZRAM algorithms?"
+        description: "Enable adding more ZRAM algorithms?"
+        required: true
+        required: true
+        required: true
+        required: true
+        default: false
+        default: false
+        default: false
+        default: false
+
+
+
+
+jobs:
+jobs:
+jobs:
+jobs:
+  build:
+  build:
+  build:
+  build:
+    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    timeout-minutes: 360
+    timeout-minutes: 360
+    timeout-minutes: 360
+
+
+
+
+    steps:
+    steps:
+    steps:
+    steps:
+      - name: Maximize build space
+      - name: Maximize build space
+      - name: Maximize build space
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        uses: easimon/maximize-build-space@master
+        uses: easimon/maximize-build-space@master
+        uses: easimon/maximize-build-space@master
+        with:
+        with:
+        with:
+        with:
+          root-reserve-mb: 8192
+          root-reserve-mb: 8192
+          root-reserve-mb: 8192
+          root-reserve-mb: 8192
+          temp-reserve-mb: 2048
+          temp-reserve-mb: 2048
+          temp-reserve-mb: 2048
+          temp-reserve-mb: 2048
+          swap-size-mb: 8192
+          swap-size-mb: 8192
+          swap-size-mb: 8192
+          swap-size-mb: 8192
+          remove-dotnet: 'true'
+          remove-dotnet: 'true'
+          remove-dotnet: 'true'
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-android: 'true'
+          remove-android: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-haskell: 'true'
+          remove-haskell: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-codeql: 'true'
+          remove-codeql: 'true'
+          remove-codeql: 'true'
+
+
+
+
+      - name: Configure Git
+      - name: Configure Git
+      - name: Configure Git
+      - name: Configure Git
+        run: |
+        run: |
+        run: |
+        run: |
+          git config --global user.name "ChromeOS-Builder"
+          git config --global user.name "ChromeOS-Builder"
+          git config --global user.name "ChromeOS-Builder"
+          git config --global user.name "ChromeOS-Builder"
+          git config --global user.email "builder@chromeos-arcvm.local"
+          git config --global user.email "builder@chromeos-arcvm.local"
+          git config --global user.email "builder@chromeos-arcvm.local"
+          git config --global user.email "builder@chromeos-arcvm.local"
+          git config --global advice.detachedHead false
+          git config --global advice.detachedHead false
+          git config --global advice.detachedHead false
+          git config --global advice.detachedHead false
+
+
+
+
+      - name: Install dependencies
+      - name: Install dependencies
+      - name: Install dependencies
+      - name: Install dependencies
+        run: |
+        run: |
+        run: |
+        run: |
+          sudo apt update  sudo apt upgrade -y
+          sudo apt update  sudo apt upgrade -y
+          sudo apt update  sudo apt upgrade -y
+          sudo apt update  sudo apt upgrade -y
+          sudo apt install -y \
+          sudo apt install -y \
+          sudo apt install -y \
+          sudo apt install -y \
+          python3 python3-pip git curl wget bc bison flex \
+          python3 python3-pip git curl wget bc bison flex \
+          python3 python3-pip git curl wget bc bison flex \
+          python3 python3-pip git curl wget bc bison flex \
+          libssl-dev libelf-dev libncurses-dev libncurses5-dev \
+          libssl-dev libelf-dev libncurses-dev libncurses5-dev \
+          libssl-dev libelf-dev libncurses-dev libncurses5-dev \
+          libssl-dev libelf-dev libncurses-dev libncurses5-dev \
+          build-essential kmod cpio debhelper rsync dwarves \
+          build-essential kmod cpio debhelper rsync dwarves \
+          build-essential kmod cpio debhelper rsync dwarves \
+          build-essential kmod cpio debhelper rsync dwarves \
+          ccache zip unzip jq pv pigz
+          ccache zip unzip jq pv pigz
+          ccache zip unzip jq pv pigz
+          ccache zip unzip jq pv pigz
+
+
+
+
+      - name: Setup ccache
+      - name: Setup ccache
+      - name: Setup ccache
+      - name: Setup ccache
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
+          ccache --max-size=5G
+          ccache --max-size=5G
+          ccache --max-size=5G
+          ccache --max-size=5G
+          ccache --set-config=compression=true
+          ccache --set-config=compression=true
+          ccache --set-config=compression=true
+          ccache --set-config=compression=true
+          ccache --set-config=compression_level=6
+          ccache --set-config=compression_level=6
+          ccache --set-config=compression_level=6
+          ccache --set-config=compression_level=6
+          ccache -z
+          ccache -z
+          ccache -z
+          ccache -z
+
+
+
+
+      - name: Show selected inputs debug
+      - name: Show selected inputs debug
+      - name: Show selected inputs debug
+      - name: Show selected inputs debug
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "          BUILD CONFIGURATION"
+          echo "          BUILD CONFIGURATION"
+          echo "          BUILD CONFIGURATION"
+          echo "          BUILD CONFIGURATION"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "Kernel Branch    : ${{ github.event.inputs.KERNEL_BRANCH }}"
+          echo "Kernel Branch    : ${{ github.event.inputs.KERNEL_BRANCH }}"
+          echo "Kernel Branch    : ${{ github.event.inputs.KERNEL_BRANCH }}"
+          echo "Kernel Branch    : ${{ github.event.inputs.KERNEL_BRANCH }}"
+          echo "Android Version  : ${{ github.event.inputs.ANDROID_VERSION }}"
+          echo "Android Version  : ${{ github.event.inputs.ANDROID_VERSION }}"
+          echo "Android Version  : ${{ github.event.inputs.ANDROID_VERSION }}"
+          echo "Android Version  : ${{ github.event.inputs.ANDROID_VERSION }}"
+          echo "Kernel Version   : ${{ github.event.inputs.KERNEL_VERSION }}"
+          echo "Kernel Version   : ${{ github.event.inputs.KERNEL_VERSION }}"
+          echo "Kernel Version   : ${{ github.event.inputs.KERNEL_VERSION }}"
+          echo "Kernel Version   : ${{ github.event.inputs.KERNEL_VERSION }}"
+          echo "SUSFS CI Build   : ${{ github.event.inputs.SUSFS_CI }}"
+          echo "SUSFS CI Build   : ${{ github.event.inputs.SUSFS_CI }}"
+          echo "SUSFS CI Build   : ${{ github.event.inputs.SUSFS_CI }}"
+          echo "SUSFS CI Build   : ${{ github.event.inputs.SUSFS_CI }}"
+          echo "VFS Hooks        : ${{ github.event.inputs.VFS }}"
+          echo "VFS Hooks        : ${{ github.event.inputs.VFS }}"
+          echo "VFS Hooks        : ${{ github.event.inputs.VFS }}"
+          echo "VFS Hooks        : ${{ github.event.inputs.VFS }}"
+          echo "KPM Support      : ${{ github.event.inputs.KPM }}"
+          echo "KPM Support      : ${{ github.event.inputs.KPM }}"
+          echo "KPM Support      : ${{ github.event.inputs.KPM }}"
+          echo "KPM Support      : ${{ github.event.inputs.KPM }}"
+          echo "ZRAM Enhanced    : ${{ github.event.inputs.ZRAM }}"
+          echo "ZRAM Enhanced    : ${{ github.event.inputs.ZRAM }}"
+          echo "ZRAM Enhanced    : ${{ github.event.inputs.ZRAM }}"
+          echo "ZRAM Enhanced    : ${{ github.event.inputs.ZRAM }}"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+
+
+
+
+      - name: Clone ChromeOS ARCVM Kernel
+      - name: Clone ChromeOS ARCVM Kernel
+      - name: Clone ChromeOS ARCVM Kernel
+      - name: Clone ChromeOS ARCVM Kernel
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "🔽 Cloning ChromeOS ARCVM kernel source..."
+          echo "🔽 Cloning ChromeOS ARCVM kernel source..."
+          echo "🔽 Cloning ChromeOS ARCVM kernel source..."
+          echo "🔽 Cloning ChromeOS ARCVM kernel source..."
+          git clone https://chromium.googlesource.com/chromiumos/third_party/kernel.git \
+          git clone https://chromium.googlesource.com/chromiumos/third_party/kernel.git \
+          git clone https://chromium.googlesource.com/chromiumos/third_party/kernel.git \
+          git clone https://chromium.googlesource.com/chromiumos/third_party/kernel.git \
+            -b ${{ github.event.inputs.KERNEL_BRANCH }} --depth=1 kernel_source
+            -b ${{ github.event.inputs.KERNEL_BRANCH }} --depth=1 kernel_source
+            -b ${{ github.event.inputs.KERNEL_BRANCH }} --depth=1 kernel_source
+            -b ${{ github.event.inputs.KERNEL_BRANCH }} --depth=1 kernel_source
+          
+          
+          
+          
+          if [ ! -d "kernel_source" ]; then
+          if [ ! -d "kernel_source" ]; then
+          if [ ! -d "kernel_source" ]; then
+          if [ ! -d "kernel_source" ]; then
+          echo "❌ Kernel source clone failed!"
+          echo "❌ Kernel source clone failed!"
+          echo "❌ Kernel source clone failed!"
+          echo "❌ Kernel source clone failed!"
+          exit 1
+          exit 1
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+          
+          
+          
+          
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "✅ Kernel source cloned successfully"
+          echo "✅ Kernel source cloned successfully"
+          echo "✅ Kernel source cloned successfully"
+          echo "✅ Kernel source cloned successfully"
+          echo "📊 Repository size: $(du -sh . | cut -f1)"
+          echo "📊 Repository size: $(du -sh . | cut -f1)"
+          echo "📊 Repository size: $(du -sh . | cut -f1)"
+          echo "📊 Repository size: $(du -sh . | cut -f1)"
+
+
+
+
+      - name: Add SukiSU Ultra to ChromeOS Kernel
+      - name: Add SukiSU Ultra to ChromeOS Kernel
+      - name: Add SukiSU Ultra to ChromeOS Kernel
+      - name: Add SukiSU Ultra to ChromeOS Kernel
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "🔧 Adding SukiSU Ultra (KernelSU) to kernel..."
+          echo "🔧 Adding SukiSU Ultra (KernelSU) to kernel..."
+          echo "🔧 Adding SukiSU Ultra (KernelSU) to kernel..."
+          echo "🔧 Adding SukiSU Ultra (KernelSU) to kernel..."
+          
+          
+          
+          
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s susfs-main
+          
+          
+          
+          
+          if [ ! -d "KernelSU" ]; then
+          if [ ! -d "KernelSU" ]; then
+          if [ ! -d "KernelSU" ]; then
+          if [ ! -d "KernelSU" ]; then
+          echo "❌ KernelSU setup failed!"
+          echo "❌ KernelSU setup failed!"
+          echo "❌ KernelSU setup failed!"
+          echo "❌ KernelSU setup failed!"
+          exit 1
+          exit 1
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+          
+          
+          
+          
+          cd ./KernelSU
+          cd ./KernelSU
+          cd ./KernelSU
+          cd ./KernelSU
+          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count main) "+" 10606)
+          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count main) "+" 10606)
+          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count main) "+" 10606)
+          KSU_VERSION=$(expr $(/usr/bin/git rev-list --count main) "+" 10606)
+          echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+          echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+          echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+          echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+          export KSU_VERSION=$KSU_VERSION
+          export KSU_VERSION=$KSU_VERSION
+          export KSU_VERSION=$KSU_VERSION
+          export KSU_VERSION=$KSU_VERSION
+          sed -i "s/DKSU_VERSION=12800/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
+          sed -i "s/DKSU_VERSION=12800/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
+          sed -i "s/DKSU_VERSION=12800/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
+          sed -i "s/DKSU_VERSION=12800/DKSU_VERSION=${KSU_VERSION}/" kernel/Makefile
+          
+          
+          
+          
+          echo "✅ SukiSU Ultra added with version: $KSU_VERSION"
+          echo "✅ SukiSU Ultra added with version: $KSU_VERSION"
+          echo "✅ SukiSU Ultra added with version: $KSU_VERSION"
+          echo "✅ SukiSU Ultra added with version: $KSU_VERSION"
+
+
+
+
+      - name: Clone SUSFS and Patch Files
+      - name: Clone SUSFS and Patch Files
+      - name: Clone SUSFS and Patch Files
+      - name: Clone SUSFS and Patch Files
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "📥 Cloning SUSFS and patch repositories..."
+          echo "📥 Cloning SUSFS and patch repositories..."
+          echo "📥 Cloning SUSFS and patch repositories..."
+          echo "📥 Cloning SUSFS and patch repositories..."
+          
+          
+          
+          
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git \
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git \
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git \
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git \
+            -b gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }} \
+            -b gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }} \
+            -b gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }} \
+            -b gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }} \
+            --depth=1
+            --depth=1
+            --depth=1
+            --depth=1
+          
+          
+          
+          
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1
+          
+          
+          
+          
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+          echo "❌ Patch repositories clone failed!"
+          echo "❌ Patch repositories clone failed!"
+          echo "❌ Patch repositories clone failed!"
+          echo "❌ Patch repositories clone failed!"
+          exit 1
+          exit 1
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+          
+          
+          
+          
+          echo "✅ SUSFS and patch repositories cloned"
+          echo "✅ SUSFS and patch repositories cloned"
+          echo "✅ SUSFS and patch repositories cloned"
+          echo "✅ SUSFS and patch repositories cloned"
+
+
+
+
+      - name: Apply SUSFS Patches to ChromeOS Kernel
+      - name: Apply SUSFS Patches to ChromeOS Kernel
+      - name: Apply SUSFS Patches to ChromeOS Kernel
+      - name: Apply SUSFS Patches to ChromeOS Kernel
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "🔨 Applying SUSFS patches to ChromeOS kernel..."
+          echo "🔨 Applying SUSFS patches to ChromeOS kernel..."
+          echo "🔨 Applying SUSFS patches to ChromeOS kernel..."
+          echo "🔨 Applying SUSFS patches to ChromeOS kernel..."
+          
+          
+          
+          
+          Verify patch file exists
+          Verify patch file exists
+          Verify patch file exists
+          Verify patch file exists
+          PATCH_FILE="susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          PATCH_FILE="susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          PATCH_FILE="susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          PATCH_FILE="susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          if [ ! -f "$PATCH_FILE" ]; then
+          if [ ! -f "$PATCH_FILE" ]; then
+          if [ ! -f "$PATCH_FILE" ]; then
+          if [ ! -f "$PATCH_FILE" ]; then
+          echo "❌ SUSFS patch file not found: $PATCH_FILE"
+          echo "❌ SUSFS patch file not found: $PATCH_FILE"
+          echo "❌ SUSFS patch file not found: $PATCH_FILE"
+          echo "❌ SUSFS patch file not found: $PATCH_FILE"
+          exit 1
+          exit 1
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+          
+          
+          
+          
+          Copy SUSFS patches
+          Copy SUSFS patches
+          Copy SUSFS patches
+          Copy SUSFS patches
+          cp "$PATCH_FILE" ./
+          cp "$PATCH_FILE" ./
+          cp "$PATCH_FILE" ./
+          cp "$PATCH_FILE" ./
+          cp -r susfs4ksu/kernel_patches/fs/* ./fs/ 2>/dev/null || true
+          cp -r susfs4ksu/kernel_patches/fs/* ./fs/ 2>/dev/null || true
+          cp -r susfs4ksu/kernel_patches/fs/* ./fs/ 2>/dev/null || true
+          cp -r susfs4ksu/kernel_patches/fs/* ./fs/ 2>/dev/null || true
+          cp -r susfs4ksu/kernel_patches/include/linux/* ./include/linux/ 2>/dev/null || true
+          cp -r susfs4ksu/kernel_patches/include/linux/* ./include/linux/ 2>/dev/null || true
+          cp -r susfs4ksu/kernel_patches/include/linux/* ./include/linux/ 2>/dev/null || true
+          cp -r susfs4ksu/kernel_patches/include/linux/* ./include/linux/ 2>/dev/null || true
+
+
+
+
+          Apply ZRAM patches if enabled
+          Apply ZRAM patches if enabled
+          Apply ZRAM patches if enabled
+          Apply ZRAM patches if enabled
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          echo "🔧 Applying ZRAM patches..."
+          echo "🔧 Applying ZRAM patches..."
+          echo "🔧 Applying ZRAM patches..."
+          echo "🔧 Applying ZRAM patches..."
+          cp -r SukiSU_patch/other/zram/lz4k/include/linux/* ./include/linux/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/include/linux/* ./include/linux/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/include/linux/* ./include/linux/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/include/linux/* ./include/linux/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/lib/* ./lib/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/lib/* ./lib/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/lib/* ./lib/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/lib/* ./lib/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/crypto/* ./crypto/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/crypto/* ./crypto/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/crypto/* ./crypto/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k/crypto/* ./crypto/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k_oplus ./lib/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k_oplus ./lib/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k_oplus ./lib/ 2>/dev/null || true
+          cp -r SukiSU_patch/other/zram/lz4k_oplus ./lib/ 2>/dev/null || true
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+          Apply main SUSFS patch
+          Apply main SUSFS patch
+          Apply main SUSFS patch
+          Apply main SUSFS patch
+          patch -p1 < "50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" || true
+          patch -p1 < "50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" || true
+          patch -p1 < "50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" || true
+          patch -p1 < "50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" || true
+          
+          
+          
+          
+          echo "✅ SUSFS patches applied successfully"
+          echo "✅ SUSFS patches applied successfully"
+          echo "✅ SUSFS patches applied successfully"
+          echo "✅ SUSFS patches applied successfully"
+
+
+
+
+      - name: Apply Hide Stuff Patches
+      - name: Apply Hide Stuff Patches
+      - name: Apply Hide Stuff Patches
+      - name: Apply Hide Stuff Patches
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "🔒 Applying hide app patches..."
+          echo "🔒 Applying hide app patches..."
+          echo "🔒 Applying hide app patches..."
+          echo "🔒 Applying hide app patches..."
+          
+          
+          
+          
+          if [ -f "SukiSU_patch/69_hide_stuff.patch" ]; then
+          if [ -f "SukiSU_patch/69_hide_stuff.patch" ]; then
+          if [ -f "SukiSU_patch/69_hide_stuff.patch" ]; then
+          if [ -f "SukiSU_patch/69_hide_stuff.patch" ]; then
+          cp SukiSU_patch/69_hide_stuff.patch ./
+          cp SukiSU_patch/69_hide_stuff.patch ./
+          cp SukiSU_patch/69_hide_stuff.patch ./
+          cp SukiSU_patch/69_hide_stuff.patch ./
+          patch -p1 -F 3 < 69_hide_stuff.patch || true
+          patch -p1 -F 3 < 69_hide_stuff.patch || true
+          patch -p1 -F 3 < 69_hide_stuff.patch || true
+          patch -p1 -F 3 < 69_hide_stuff.patch || true
+          echo "✅ Hide stuff patches applied"
+          echo "✅ Hide stuff patches applied"
+          echo "✅ Hide stuff patches applied"
+          echo "✅ Hide stuff patches applied"
+          else
+          else
+          else
+          else
+          echo "⚠️  Hide stuff patch not found, skipping..."
+          echo "⚠️  Hide stuff patch not found, skipping..."
+          echo "⚠️  Hide stuff patch not found, skipping..."
+          echo "⚠️  Hide stuff patch not found, skipping..."
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+      - name: Apply VFS Hooks
+      - name: Apply VFS Hooks
+      - name: Apply VFS Hooks
+      - name: Apply VFS Hooks
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          echo "🔗 Applying VFS manual hooks patches..."
+          echo "🔗 Applying VFS manual hooks patches..."
+          echo "🔗 Applying VFS manual hooks patches..."
+          echo "🔗 Applying VFS manual hooks patches..."
+            
+            
+            
+            
+          if [ -f "SukiSU_patch/hooks/syscall_hooks.patch" ]; then
+          if [ -f "SukiSU_patch/hooks/syscall_hooks.patch" ]; then
+          if [ -f "SukiSU_patch/hooks/syscall_hooks.patch" ]; then
+          if [ -f "SukiSU_patch/hooks/syscall_hooks.patch" ]; then
+          cp SukiSU_patch/hooks/syscall_hooks.patch ./
+          cp SukiSU_patch/hooks/syscall_hooks.patch ./
+          cp SukiSU_patch/hooks/syscall_hooks.patch ./
+          cp SukiSU_patch/hooks/syscall_hooks.patch ./
+          patch -p1 -F 3 < syscall_hooks.patch || true
+          patch -p1 -F 3 < syscall_hooks.patch || true
+          patch -p1 -F 3 < syscall_hooks.patch || true
+          patch -p1 -F 3 < syscall_hooks.patch || true
+          echo "✅ VFS hooks applied successfully"
+          echo "✅ VFS hooks applied successfully"
+          echo "✅ VFS hooks applied successfully"
+          echo "✅ VFS hooks applied successfully"
+          else
+          else
+          else
+          else
+          echo "⚠️  VFS hooks patch not found, skipping..."
+          echo "⚠️  VFS hooks patch not found, skipping..."
+          echo "⚠️  VFS hooks patch not found, skipping..."
+          echo "⚠️  VFS hooks patch not found, skipping..."
+          fi
+          fi
+          fi
+          fi
+          else
+          else
+          else
+          else
+          echo "⏭️  VFS hooks disabled, skipping..."
+          echo "⏭️  VFS hooks disabled, skipping..."
+          echo "⏭️  VFS hooks disabled, skipping..."
+          echo "⏭️  VFS hooks disabled, skipping..."
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+      - name: Apply LZ4KD Patches
+      - name: Apply LZ4KD Patches
+      - name: Apply LZ4KD Patches
+      - name: Apply LZ4KD Patches
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          echo "📦 Applying LZ4KD patches..."
+          echo "📦 Applying LZ4KD patches..."
+          echo "📦 Applying LZ4KD patches..."
+          echo "📦 Applying LZ4KD patches..."
+            
+            
+            
+            
+          ZRAM_PATCH="SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch"
+          ZRAM_PATCH="SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch"
+          ZRAM_PATCH="SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch"
+          ZRAM_PATCH="SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch"
+          if [ -f "$ZRAM_PATCH" ]; then
+          if [ -f "$ZRAM_PATCH" ]; then
+          if [ -f "$ZRAM_PATCH" ]; then
+          if [ -f "$ZRAM_PATCH" ]; then
+          cp "$ZRAM_PATCH" ./
+          cp "$ZRAM_PATCH" ./
+          cp "$ZRAM_PATCH" ./
+          cp "$ZRAM_PATCH" ./
+          patch -p1 -F 3 < lz4kd.patch || true
+          patch -p1 -F 3 < lz4kd.patch || true
+          patch -p1 -F 3 < lz4kd.patch || true
+          patch -p1 -F 3 < lz4kd.patch || true
+          echo "✅ LZ4KD patches applied successfully"
+          echo "✅ LZ4KD patches applied successfully"
+          echo "✅ LZ4KD patches applied successfully"
+          echo "✅ LZ4KD patches applied successfully"
+          else
+          else
+          else
+          else
+          echo "⚠️  LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}"
+          echo "⚠️  LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}"
+          echo "⚠️  LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}"
+          echo "⚠️  LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}"
+          fi
+          fi
+          fi
+          fi
+          else
+          else
+          else
+          else
+          echo "⏭️  ZRAM enhancement disabled, skipping..."
+          echo "⏭️  ZRAM enhancement disabled, skipping..."
+          echo "⏭️  ZRAM enhancement disabled, skipping..."
+          echo "⏭️  ZRAM enhancement disabled, skipping..."
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+      - name: Configure ChromeOS Kernel for x86_64
+      - name: Configure ChromeOS Kernel for x86_64
+      - name: Configure ChromeOS Kernel for x86_64
+      - name: Configure ChromeOS Kernel for x86_64
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "⚙️  Configuring ChromeOS kernel for x86_64..."
+          echo "⚙️  Configuring ChromeOS kernel for x86_64..."
+          echo "⚙️  Configuring ChromeOS kernel for x86_64..."
+          echo "⚙️  Configuring ChromeOS kernel for x86_64..."
+          
+          
+          
+          
+          Find the appropriate defconfig for ChromeOS ARCVM x86_64
+          Find the appropriate defconfig for ChromeOS ARCVM x86_64
+          Find the appropriate defconfig for ChromeOS ARCVM x86_64
+          Find the appropriate defconfig for ChromeOS ARCVM x86_64
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          CONFIG_FILE=arch/x86/configs/chromiumos-x86_64_defconfig
+          CONFIG_FILE=arch/x86/configs/chromiumos-x86_64_defconfig
+          CONFIG_FILE=arch/x86/configs/chromiumos-x86_64_defconfig
+          CONFIG_FILE=arch/x86/configs/chromiumos-x86_64_defconfig
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          CONFIG_FILE=arch/x86/configs/chromeos_defconfig
+          CONFIG_FILE=arch/x86/configs/chromeos_defconfig
+          CONFIG_FILE=arch/x86/configs/chromeos_defconfig
+          CONFIG_FILE=arch/x86/configs/chromeos_defconfig
+          else
+          else
+          else
+          else
+          CONFIG_FILE=arch/x86/configs/x86_64_defconfig
+          CONFIG_FILE=arch/x86/configs/x86_64_defconfig
+          CONFIG_FILE=arch/x86/configs/x86_64_defconfig
+          CONFIG_FILE=arch/x86/configs/x86_64_defconfig
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+          echo "📝 Using config file: $CONFIG_FILE"
+          echo "📝 Using config file: $CONFIG_FILE"
+          echo "📝 Using config file: $CONFIG_FILE"
+          echo "📝 Using config file: $CONFIG_FILE"
+
+
+
+
+          SukiSU Ultra configuration
+          SukiSU Ultra configuration
+          SukiSU Ultra configuration
+          SukiSU Ultra configuration
+          echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KPM=y" >> "$CONFIG_FILE"
+          
+          
+          
+          
+          if [ "${{ github.event.inputs.VFS }}" = "false" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "false" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "false" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "false" ]; then
+          echo "CONFIG_KPROBES=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KPROBES=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KPROBES=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KPROBES=y" >> "$CONFIG_FILE"
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+          VFS configuration
+          VFS configuration
+          VFS configuration
+          VFS configuration
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
+          else
+          else
+          else
+          else
+          echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$CONFIG_FILE"
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+          SUSFS configuration
+          SUSFS configuration
+          SUSFS configuration
+          SUSFS configuration
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$CONFIG_FILE"
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+          ZRAM/LZ4KD configuration
+          ZRAM/LZ4KD configuration
+          ZRAM/LZ4KD configuration
+          ZRAM/LZ4KD configuration
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZSMALLOC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZO=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZO=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZO=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZO=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4HC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4HC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4HC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4HC=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4K=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4K=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4K=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4K=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4KD=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4KD=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4KD=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_LZ4KD=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_842=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_842=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_842=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CRYPTO_842=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM_WRITEBACK=y" >> "$CONFIG_FILE"
+            
+            
+            
+            
+          if [ "${{ github.event.inputs.KERNEL_VERSION }}" = "5.10" ]; then
+          if [ "${{ github.event.inputs.KERNEL_VERSION }}" = "5.10" ]; then
+          if [ "${{ github.event.inputs.KERNEL_VERSION }}" = "5.10" ]; then
+          if [ "${{ github.event.inputs.KERNEL_VERSION }}" = "5.10" ]; then
+          echo "CONFIG_ZRAM_DEF_COMP_LZ4KD=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM_DEF_COMP_LZ4KD=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM_DEF_COMP_LZ4KD=y" >> "$CONFIG_FILE"
+          echo "CONFIG_ZRAM_DEF_COMP_LZ4KD=y" >> "$CONFIG_FILE"
+          fi
+          fi
+          fi
+          fi
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+          x86_64 specific settings
+          x86_64 specific settings
+          x86_64 specific settings
+          x86_64 specific settings
+          echo "CONFIG_64BIT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_64BIT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_64BIT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_64BIT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_X86_64=y" >> "$CONFIG_FILE"
+          echo "CONFIG_X86_64=y" >> "$CONFIG_FILE"
+          echo "CONFIG_X86_64=y" >> "$CONFIG_FILE"
+          echo "CONFIG_X86_64=y" >> "$CONFIG_FILE"
+          
+          
+          
+          
+          echo "✅ Kernel configuration completed"
+          echo "✅ Kernel configuration completed"
+          echo "✅ Kernel configuration completed"
+          echo "✅ Kernel configuration completed"
+
+
+
+
+      - name: Build ChromeOS ARCVM x86_64 Kernel
+      - name: Build ChromeOS ARCVM x86_64 Kernel
+      - name: Build ChromeOS ARCVM x86_64 Kernel
+      - name: Build ChromeOS ARCVM x86_64 Kernel
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "🔨 Building ChromeOS ARCVM x86_64 kernel..."
+          echo "🔨 Building ChromeOS ARCVM x86_64 kernel..."
+          echo "🔨 Building ChromeOS ARCVM x86_64 kernel..."
+          echo "🔨 Building ChromeOS ARCVM x86_64 kernel..."
+          
+          
+          
+          
+          Determine config file
+          Determine config file
+          Determine config file
+          Determine config file
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          DEFCONFIG=chromiumos-x86_64_defconfig
+          DEFCONFIG=chromiumos-x86_64_defconfig
+          DEFCONFIG=chromiumos-x86_64_defconfig
+          DEFCONFIG=chromiumos-x86_64_defconfig
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          DEFCONFIG=chromeos_defconfig
+          DEFCONFIG=chromeos_defconfig
+          DEFCONFIG=chromeos_defconfig
+          DEFCONFIG=chromeos_defconfig
+          else
+          else
+          else
+          else
+          DEFCONFIG=x86_64_defconfig
+          DEFCONFIG=x86_64_defconfig
+          DEFCONFIG=x86_64_defconfig
+          DEFCONFIG=x86_64_defconfig
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+          echo "📋 Building with defconfig: $DEFCONFIG"
+          echo "📋 Building with defconfig: $DEFCONFIG"
+          echo "📋 Building with defconfig: $DEFCONFIG"
+          echo "📋 Building with defconfig: $DEFCONFIG"
+          
+          
+          
+          
+          Record start time
+          Record start time
+          Record start time
+          Record start time
+          BUILD_START=$(date +%s)
+          BUILD_START=$(date +%s)
+          BUILD_START=$(date +%s)
+          BUILD_START=$(date +%s)
+          
+          
+          
+          
+          Generate .config
+          Generate .config
+          Generate .config
+          Generate .config
+          make ARCH=x86_64 $DEFCONFIG
+          make ARCH=x86_64 $DEFCONFIG
+          make ARCH=x86_64 $DEFCONFIG
+          make ARCH=x86_64 $DEFCONFIG
+          
+          
+          
+          
+          Build kernel with progress indication
+          Build kernel with progress indication
+          Build kernel with progress indication
+          Build kernel with progress indication
+          echo "⚡ Starting parallel build with $(nproc) cores..."
+          echo "⚡ Starting parallel build with $(nproc) cores..."
+          echo "⚡ Starting parallel build with $(nproc) cores..."
+          echo "⚡ Starting parallel build with $(nproc) cores..."
+          make ARCH=x86_64 -j$(nproc) bzImage modules 2>1 | tee build.log
+          make ARCH=x86_64 -j$(nproc) bzImage modules 2>1 | tee build.log
+          make ARCH=x86_64 -j$(nproc) bzImage modules 2>1 | tee build.log
+          make ARCH=x86_64 -j$(nproc) bzImage modules 2>1 | tee build.log
+          
+          
+          
+          
+          Calculate build time
+          Calculate build time
+          Calculate build time
+          Calculate build time
+          BUILD_END=$(date +%s)
+          BUILD_END=$(date +%s)
+          BUILD_END=$(date +%s)
+          BUILD_END=$(date +%s)
+          BUILD_TIME=$((BUILD_END - BUILD_START))
+          BUILD_TIME=$((BUILD_END - BUILD_START))
+          BUILD_TIME=$((BUILD_END - BUILD_START))
+          BUILD_TIME=$((BUILD_END - BUILD_START))
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_ENV
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_ENV
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_ENV
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_ENV
+          
+          
+          
+          
+          Verify build success
+          Verify build success
+          Verify build success
+          Verify build success
+          if [ -f arch/x86/boot/bzImage ] || [ -f arch/x86_64/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ] || [ -f arch/x86_64/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ] || [ -f arch/x86_64/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ] || [ -f arch/x86_64/boot/bzImage ]; then
+          echo "✅ Kernel build completed in ${BUILD_TIME}s ($(($BUILD_TIME / 60))m)"
+          echo "✅ Kernel build completed in ${BUILD_TIME}s ($(($BUILD_TIME / 60))m)"
+          echo "✅ Kernel build completed in ${BUILD_TIME}s ($(($BUILD_TIME / 60))m)"
+          echo "✅ Kernel build completed in ${BUILD_TIME}s ($(($BUILD_TIME / 60))m)"
+          else
+          else
+          else
+          else
+          echo "❌ Kernel build failed - bzImage not found!"
+          echo "❌ Kernel build failed - bzImage not found!"
+          echo "❌ Kernel build failed - bzImage not found!"
+          echo "❌ Kernel build failed - bzImage not found!"
+          exit 1
+          exit 1
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+      - name: Show ccache statistics
+      - name: Show ccache statistics
+      - name: Show ccache statistics
+      - name: Show ccache statistics
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "📊 ccache statistics:"
+          echo "📊 ccache statistics:"
+          echo "📊 ccache statistics:"
+          echo "📊 ccache statistics:"
+          ccache -s
+          ccache -s
+          ccache -s
+          ccache -s
+
+
+
+
+      - name: Apply KPM Patch to bzImage
+      - name: Apply KPM Patch to bzImage
+      - name: Apply KPM Patch to bzImage
+      - name: Apply KPM Patch to bzImage
+        if: ${{ github.event.inputs.KPM == 'true' }}
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "🔧 Applying KPM patch to bzImage..."
+          echo "🔧 Applying KPM patch to bzImage..."
+          echo "🔧 Applying KPM patch to bzImage..."
+          echo "🔧 Applying KPM patch to bzImage..."
+          
+          
+          
+          
+          Find bzImage location
+          Find bzImage location
+          Find bzImage location
+          Find bzImage location
+          if [ -f arch/x86/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ]; then
+          BZIMAGE_PATH=arch/x86/boot/bzImage
+          BZIMAGE_PATH=arch/x86/boot/bzImage
+          BZIMAGE_PATH=arch/x86/boot/bzImage
+          BZIMAGE_PATH=arch/x86/boot/bzImage
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          BZIMAGE_PATH=arch/x86_64/boot/bzImage
+          BZIMAGE_PATH=arch/x86_64/boot/bzImage
+          BZIMAGE_PATH=arch/x86_64/boot/bzImage
+          BZIMAGE_PATH=arch/x86_64/boot/bzImage
+          else
+          else
+          else
+          else
+          echo "❌ bzImage not found!"
+          echo "❌ bzImage not found!"
+          echo "❌ bzImage not found!"
+          echo "❌ bzImage not found!"
+          exit 1
+          exit 1
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+          echo "📍 Found bzImage at: $BZIMAGE_PATH"
+          echo "📍 Found bzImage at: $BZIMAGE_PATH"
+          echo "📍 Found bzImage at: $BZIMAGE_PATH"
+          echo "📍 Found bzImage at: $BZIMAGE_PATH"
+          
+          
+          
+          
+          Download and apply patch_linux
+          Download and apply patch_linux
+          Download and apply patch_linux
+          Download and apply patch_linux
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch_linux
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch_linux
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch_linux
+          curl -LSs "https://raw.githubusercontent.com/ShirkNeko/SukiSU_patch/refs/heads/main/kpm/patch_linux" -o patch_linux
+          chmod +x patch_linux
+          chmod +x patch_linux
+          chmod +x patch_linux
+          chmod +x patch_linux
+          
+          
+          
+          
+          Backup original
+          Backup original
+          Backup original
+          Backup original
+          cp $BZIMAGE_PATH bzImage.orig
+          cp $BZIMAGE_PATH bzImage.orig
+          cp $BZIMAGE_PATH bzImage.orig
+          cp $BZIMAGE_PATH bzImage.orig
+          
+          
+          
+          
+          Copy bzImage to current directory for patching
+          Copy bzImage to current directory for patching
+          Copy bzImage to current directory for patching
+          Copy bzImage to current directory for patching
+          cp $BZIMAGE_PATH ./bzImage
+          cp $BZIMAGE_PATH ./bzImage
+          cp $BZIMAGE_PATH ./bzImage
+          cp $BZIMAGE_PATH ./bzImage
+          
+          
+          
+          
+          Apply KPM patch
+          Apply KPM patch
+          Apply KPM patch
+          Apply KPM patch
+          if ./patch_linux; then
+          if ./patch_linux; then
+          if ./patch_linux; then
+          if ./patch_linux; then
+          Replace original with patched version
+          Replace original with patched version
+          Replace original with patched version
+          Replace original with patched version
+          rm -f bzImage
+          rm -f bzImage
+          rm -f bzImage
+          rm -f bzImage
+          mv oBzImage bzImage
+          mv oBzImage bzImage
+          mv oBzImage bzImage
+          mv oBzImage bzImage
+          cp bzImage $BZIMAGE_PATH
+          cp bzImage $BZIMAGE_PATH
+          cp bzImage $BZIMAGE_PATH
+          cp bzImage $BZIMAGE_PATH
+          echo "✅ KPM patch applied successfully to bzImage"
+          echo "✅ KPM patch applied successfully to bzImage"
+          echo "✅ KPM patch applied successfully to bzImage"
+          echo "✅ KPM patch applied successfully to bzImage"
+          else
+          else
+          else
+          else
+          echo "⚠️  KPM patch failed, using original bzImage"
+          echo "⚠️  KPM patch failed, using original bzImage"
+          echo "⚠️  KPM patch failed, using original bzImage"
+          echo "⚠️  KPM patch failed, using original bzImage"
+          cp bzImage.orig $BZIMAGE_PATH
+          cp bzImage.orig $BZIMAGE_PATH
+          cp bzImage.orig $BZIMAGE_PATH
+          cp bzImage.orig $BZIMAGE_PATH
+          fi
+          fi
+          fi
+          fi
+
+
+
+
+      - name: Create ChromeOS ARCVM Kernel Package
+      - name: Create ChromeOS ARCVM Kernel Package
+      - name: Create ChromeOS ARCVM Kernel Package
+      - name: Create ChromeOS ARCVM Kernel Package
+        run: |
+        run: |
+        run: |
+        run: |
+          mkdir -p chromeos_kernel_output
+          mkdir -p chromeos_kernel_output
+          mkdir -p chromeos_kernel_output
+          mkdir -p chromeos_kernel_output
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          echo "📦 Creating ChromeOS ARCVM kernel package..."
+          echo "📦 Creating ChromeOS ARCVM kernel package..."
+          echo "📦 Creating ChromeOS ARCVM kernel package..."
+          echo "📦 Creating ChromeOS ARCVM kernel package..."
+          
+          
+          
+          
+          Find and copy bzImage
+          Find and copy bzImage
+          Find and copy bzImage
+          Find and copy bzImage
+          if [ -f arch/x86/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ]; then
+          if [ -f arch/x86/boot/bzImage ]; then
+          cp arch/x86/boot/bzImage ../chromeos_kernel_output/
+          cp arch/x86/boot/bzImage ../chromeos_kernel_output/
+          cp arch/x86/boot/bzImage ../chromeos_kernel_output/
+          cp arch/x86/boot/bzImage ../chromeos_kernel_output/
+          echo "✅ Copied bzImage from arch/x86/boot/"
+          echo "✅ Copied bzImage from arch/x86/boot/"
+          echo "✅ Copied bzImage from arch/x86/boot/"
+          echo "✅ Copied bzImage from arch/x86/boot/"
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          cp arch/x86_64/boot/bzImage ../chromeos_kernel_output/
+          cp arch/x86_64/boot/bzImage ../chromeos_kernel_output/
+          cp arch/x86_64/boot/bzImage ../chromeos_kernel_output/
+          cp arch/x86_64/boot/bzImage ../chromeos_kernel_output/
+          echo "✅ Copied bzImage from arch/x86_64/boot/"
+          echo "✅ Copied bzImage from arch/x86_64/boot/"
+          echo "✅ Copied bzImage from arch/x86_64/boot/"
+          echo "✅ Copied bzImage from arch/x86_64/boot/"
+          else
+          else
+          else
+          else
+          echo "❌ bzImage not found!"
+          echo "❌ bzImage not found!"
+          echo "❌ bzImage not found!"
+          echo "❌ bzImage not found!"
+          exit 1
+          exit 1
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+          
+          
+          
+          
+          Copy modules
+          Copy modules
+          Copy modules
+          Copy modules
+          echo "📦 Installing kernel modules..."
+          echo "📦 Installing kernel modules..."
+          echo "📦 Installing kernel modules..."
+          echo "📦 Installing kernel modules..."
+          make ARCH=x86_64 INSTALL_MOD_PATH=../chromeos_kernel_output modules_install
+          make ARCH=x86_64 INSTALL_MOD_PATH=../chromeos_kernel_output modules_install
+          make ARCH=x86_64 INSTALL_MOD_PATH=../chromeos_kernel_output modules_install
+          make ARCH=x86_64 INSTALL_MOD_PATH=../chromeos_kernel_output modules_install
+          
+          
+          
+          
+          Create info file
+          Create info file
+          Create info file
+          Create info file
+          cd ../chromeos_kernel_output
+          cd ../chromeos_kernel_output
+          cd ../chromeos_kernel_output
+          cd ../chromeos_kernel_output
+          cat > KERNEL_INFO.txt << 'KERNELINFO'
+          ================================================================================
+          ChromeOS ARCVM x86_64 SukiSU Ultra Kernel
+          ================================================================================
+
+          Build Information&#58;
+  --------------------------------------------------------------------------------
+          Kernel Branch       &#58; &#36;{{ github.event.inputs.KERNEL_BRANCH }}
+          Android Version     &#58; &#36;{{ github.event.inputs.ANDROID_VERSION }}
+          Kernel Version      &#58; &#36;{{ github.event.inputs.KERNEL_VERSION }}
+          SukiSU Ultra Version&#58; &#36;{{ env.KSUVER }}
+          Build Date          &#58; $(date)
+          Build Time          &#58; &#36;{{ env.BUILD_TIME }}s
+
+          ✨ Features&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          VFS Manual Hooks    &#58; &#36;{{ github.event.inputs.VFS }}
+          KPM Enabled         &#58; &#36;{{ github.event.inputs.KPM }}
+          ZRAM Enhanced       &#58; &#36;{{ github.event.inputs.ZRAM }}
+
+          📦 Package Contents&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          • bzImage (ChromeOS ARCVM kernel)
+          • Kernel modules
+          • SUSFS module
+          • Installation scripts
+          • Documentation
+
+          🚀 Installation Instructions&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          1. Extract bzImage from this package
+          2. Replace your ChromeOS ARCVM kernel image
+          3. Reboot your Chromebook
+          4. Install KernelSU Manager app in Android container
+          5. Install SUSFS module from the package
+
+          ⚠️  Requirements&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          • ChromeOS with Developer Mode enabled
+          • ARCVM (Android container) enabled
+          • x86_64 CPU architecture
+          • Backup of original kernel recommended
+
+          ════════════════════════════════════════════════════════════════
+          For support&#58; https&#58;//github.com/SukiSU-Ultra/SukiSU-Ultra
+          ════════════════════════════════════════════════════════════════
+          EOF
+          
+          echo "✅ Kernel package prepared"
+
+  - name&#58; Download SUSFS Module from CI
+          if&#58; &#36;{{ github.event.inputs.SUSFS_CI == 'true' }}
+          run&#58; |
+          echo "📥 Downloading SUSFS module from CI..."
+          
+          LATEST_RUN_ID=$(curl -s -H "Authorization&#58; Bearer &#36;{{ secrets.GITHUB_TOKEN }}" \
+          "https&#58;//api.github.com/repos/sidex15/susfs4ksu-module/actions/runs?status=success" | \
+          jq -r '.workflow_runs[] | select(.head_branch == "v1.5.2+") | .id' | head -n 1)
+
+          if [ -z "$LATEST_RUN_ID" ]; then
+          echo "⚠️  No successful CI run found for branch v1.5.2+, falling back to release..."
+          wget -q https&#58;//github.com/sidex15/ksu_module_susfs/releases/latest/download/ksu_module_susfs_1.5.2+.zip \
+  -O ksu_module_susfs.zip
+          else
+          ARTIFACT_URL=$(curl -s -H "Authorization&#58; Bearer &#36;{{ secrets.GITHUB_TOKEN }}" \
+          "https&#58;//api.github.com/repos/sidex15/susfs4ksu-module/actions/runs/$LATEST_RUN_ID/artifacts" | \
+          jq -r '.artifacts[0].archive_download_url')
+            
+          curl -L -H "Authorization&#58; Bearer &#36;{{ secrets.GITHUB_TOKEN }}" \
+  -o ksu_module_susfs.zip "$ARTIFACT_URL"
+          fi
+          
+          cp ksu_module_susfs.zip ./chromeos_kernel_output/
+          echo "✅ SUSFS module downloaded"
+
+  - name&#58; Download SUSFS Module from Release
+          if&#58; &#36;{{ github.event.inputs.SUSFS_CI == 'false' }}
+          run&#58; |
+          echo "📥 Downloading SUSFS module from release..."
+          wget -q https&#58;//github.com/sidex15/ksu_module_susfs/releases/latest/download/ksu_module_susfs_1.5.2+.zip \
+  -O ksu_module_susfs.zip
+          cp ksu_module_susfs.zip ./chromeos_kernel_output/
+          echo "✅ SUSFS module downloaded"
+
+  - name&#58; Create Installation Script
+          run&#58; |
+          cd chromeos_kernel_output
+          cat > install_chromeos.sh << 'INSTALLEOF'
+          !/bin/bash
+          ChromeOS ARCVM SukiSU Ultra Kernel Installation Script
+
+          set -e
+
+          echo "+------------------------------------------------------------+"
+          echo "|        ChromeOS ARCVM SukiSU Ultra Installer              |"
+          echo "+------------------------------------------------------------+"
+          echo ""
+          echo "⚠️  WARNING&#58; This will modify your ChromeOS kernel!"
+          echo "    Make sure you have a backup before proceeding."
+          echo ""
+          read -p "Continue? (yes/no)&#58; " confirm
+
+          if [ "$confirm" != "yes" ]; then
+          echo "Installation cancelled."
+          exit 1
+          fi
+
+          Enable developer mode check
+          if [ ! -f /usr/share/vboot/bin/make_dev_ssd.sh ]; then
+          echo "❌ Error&#58; ChromeOS developer mode not enabled!"
+          echo "   Please enable developer mode first."
+          exit 1
+          fi
+
+          Remove rootfs verification
+          echo "🔓 Removing rootfs verification..."
+          sudo /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4
+
+          Mount root as read-write
+          echo "💾 Remounting root as read-write..."
+          sudo mount -o remount,rw /
+
+          Backup original kernel
+          echo "📦 Backing up original kernel..."
+          KERNEL_PATH="/opt/google/containers/android/system.raw.img"
+          if [ -f "$KERNEL_PATH" ]; then
+          sudo cp "$KERNEL_PATH" "&#36;{KERNEL_PATH}.backup"
+          echo "✅ Original kernel backed up to &#36;{KERNEL_PATH}.backup"
+          fi
+
+          Install new kernel
+          echo "🔧 Installing SukiSU Ultra kernel..."
+          sudo cp bzImage "$KERNEL_PATH"
+
+          Install modules
+          echo "📦 Installing kernel modules..."
+          sudo cp -r lib/modules/* /lib/modules/
+
+          echo ""
+          echo "╔════════════════════════════════════════════════════════════╗"
+          echo "║          Installation completed successfully!             ║"
+          echo "╚════════════════════════════════════════════════════════════╝"
+          echo ""
+          echo "📋 Next steps&#58;"
+          echo "  1. Reboot your Chromebook"
+          echo "  2. Install KernelSU Manager in Android"
+          echo "  3. Flash the SUSFS module from this package"
+          echo ""
+          read -p "Reboot now? (yes/no)&#58; " reboot_confirm
+
+          if [ "$reboot_confirm" = "yes" ]; then
+          sudo reboot
+          fi
+          INSTALLEOF
+          chmod +x install_chromeos.sh
+          chmod +x install_chromeos.sh
+          chmod +x install_chromeos.sh
+          chmod +x install_chromeos.sh
+          echo "✅ Installation script created"
+          echo "✅ Installation script created"
+          echo "✅ Installation script created"
+          echo "✅ Installation script created"
+
+
+
+
+      - name: Create README
+      - name: Create README
+      - name: Create README
+      - name: Create README
+        run: |
+        run: |
+        run: |
+        run: |
+          cd chromeos_kernel_output
+          cd chromeos_kernel_output
+          cd chromeos_kernel_output
+          cd chromeos_kernel_output
+          cat > README.md << 'READMEEOF'
+          ChromeOS ARCVM x86_64 SukiSU Ultra Kernel
+
+          This package contains a custom ChromeOS ARCVM kernel with integrated SukiSU Ultra (KernelSU) and SUSFS support.
+
+          ✨ Features
+
+  - ✅ SukiSU Ultra (KernelSU) integrated
+  - ✅ SUSFS (Hiding root detection)
+  - ✅ KPM (Kernel Patch Module) support
+  - ✅ VFS manual hooks
+  - ✅ Enhanced ZRAM with LZ4KD compression
+  - ✅ x86_64 architecture optimized for ChromeOS ARCVM
+
+          📋 Requirements
+
+  - ChromeOS device with developer mode enabled
+  - ARCVM (Android container) enabled
+  - x86_64 CPU architecture
+  - Basic knowledge of ChromeOS internals
+
+          🚀 Installation
+
+          Step 1&#58; Enable Developer Mode
+
+          1. Power off your Chromebook
+          2. Press `ESC + Refresh + Power` to enter Recovery Mode
+          3. Press `Ctrl + D` to enable Developer Mode
+          4. Follow on-screen instructions
+
+          Step 2&#58; Install the Kernel
+
+          ```bash
+          Extract the package
+          unzip CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL.zip
+          cd chromeos_kernel_output
+
+          Run installation script
+          ./install_chromeos.sh
+          ```
+
+          Step 3&#58; Install KernelSU Manager
+
+          1. Reboot your Chromebook
+          2. Open Android container
+          3. Install KernelSU Manager APK
+          4. Verify root access
+
+          Step 4&#58; Install SUSFS Module
+
+          1. In KernelSU Manager, go to Modules
+          2. Click "Install from storage"
+          3. Select the included `ksu_module_susfs*.zip`
+          4. Reboot
+
+          🔧 Manual Installation
+
+          If the automatic script doesn't work&#58;
+
+          ```bash
+          Remove rootfs verification
+          sudo /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4
+
+          Remount as read-write
+          sudo mount -o remount,rw /
+
+          Backup original kernel
+          sudo cp /opt/google/containers/android/system.raw.img /opt/google/containers/android/system.raw.img.backup
+
+          Copy new kernel
+          sudo cp bzImage /opt/google/containers/android/system.raw.img
+
+          Install modules
+          sudo cp -r lib/modules/* /lib/modules/
+
+          Reboot
+          sudo reboot
+          ```
+
+          ✅ Verification
+
+          After installation and reboot&#58;
+
+          1. Open Android container
+          2. Install and open KernelSU Manager
+          3. Check if root access is granted
+          4. Verify kernel version shows SukiSU Ultra
+
+          🔧 Troubleshooting
+
+          Chromebook won't boot
+  - Reboot into Recovery Mode
+  - Restore from backup or reinstall ChromeOS
+
+          ARCVM won't start
+  - Check if Android container is enabled in settings
+  - Verify kernel image wasn't corrupted during copy
+
+          Root not working
+  - Ensure KernelSU Manager is latest version
+  - Check if SUSFS module is installed correctly
+  - Verify kernel version in KernelSU Manager
+
+          🔄 Reverting to Original Kernel
+
+          ```bash
+          sudo mount -o remount,rw /
+          sudo cp /opt/google/containers/android/system.raw.img.backup /opt/google/containers/android/system.raw.img
+          sudo reboot
+          ```
+
+          ⚠️ Important Notes
+
+  - ⚠️ This voids your warranty
+  - ⚠️ Developer mode reduces security
+  - ⚠️ Keep backups of important data
+  - ⚠️ Some apps may detect root despite SUSFS
+
+          🆘 Support
+
+          For issues and questions&#58;
+  - GitHub Issues&#58; [SukiSU Ultra Repository](https&#58;//github.com/SukiSU-Ultra/SukiSU-Ultra)
+  - XDA Forums&#58; ChromeOS Development Section
+
+          🙏 Credits
+
+  - SukiSU Ultra Team
+  - SUSFS Project
+  - KernelSU Project
+  - ChromeOS Kernel Team
+
+          📜 License
+
+          This kernel includes components under various open source licenses.
+          See individual component licenses for details.
+          READMEEOF
+          echo "✅ README created"
+          echo "✅ README created"
+          echo "✅ README created"
+          echo "✅ README created"
+
+
+
+
+      - name: Set suffix for package name
+      - name: Set suffix for package name
+      - name: Set suffix for package name
+      - name: Set suffix for package name
+        id: suffix
+        id: suffix
+        id: suffix
+        id: suffix
+        run: |
+        run: |
+        run: |
+        run: |
+          SUFFIX=""
+          SUFFIX=""
+          SUFFIX=""
+          SUFFIX=""
+          if [ "${{ github.event.inputs.KPM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.KPM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.KPM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.KPM }}" = "true" ]; then
+          SUFFIX="${SUFFIX}_KPM"
+          SUFFIX="${SUFFIX}_KPM"
+          SUFFIX="${SUFFIX}_KPM"
+          SUFFIX="${SUFFIX}_KPM"
+          fi
+          fi
+          fi
+          fi
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+          SUFFIX="${SUFFIX}_VFS"
+          SUFFIX="${SUFFIX}_VFS"
+          SUFFIX="${SUFFIX}_VFS"
+          SUFFIX="${SUFFIX}_VFS"
+          fi
+          fi
+          fi
+          fi
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          if [ "${{ github.event.inputs.ZRAM }}" = "true" ]; then
+          SUFFIX="${SUFFIX}_LZ4KD"
+          SUFFIX="${SUFFIX}_LZ4KD"
+          SUFFIX="${SUFFIX}_LZ4KD"
+          SUFFIX="${SUFFIX}_LZ4KD"
+          fi
+          fi
+          fi
+          fi
+          echo "value=$SUFFIX" >> $GITHUB_OUTPUT
+          echo "value=$SUFFIX" >> $GITHUB_OUTPUT
+          echo "value=$SUFFIX" >> $GITHUB_OUTPUT
+          echo "value=$SUFFIX" >> $GITHUB_OUTPUT
+          echo "📝 Package suffix: $SUFFIX"
+          echo "📝 Package suffix: $SUFFIX"
+          echo "📝 Package suffix: $SUFFIX"
+          echo "📝 Package suffix: $SUFFIX"
+
+
+
+
+      - name: Package ChromeOS Kernel
+      - name: Package ChromeOS Kernel
+      - name: Package ChromeOS Kernel
+      - name: Package ChromeOS Kernel
+        run: |
+        run: |
+        run: |
+        run: |
+          cd chromeos_kernel_output
+          cd chromeos_kernel_output
+          cd chromeos_kernel_output
+          cd chromeos_kernel_output
+          echo "🗜️  Creating ZIP package..."
+          echo "🗜️  Creating ZIP package..."
+          echo "🗜️  Creating ZIP package..."
+          echo "🗜️  Creating ZIP package..."
+          zip -r ../CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip . -q
+          zip -r ../CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip . -q
+          zip -r ../CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip . -q
+          zip -r ../CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip . -q
+          cd ..
+          cd ..
+          cd ..
+          cd ..
+          
+          
+          
+          
+          PACKAGE_SIZE=$(du -h "CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip" | cut -f1)
+          PACKAGE_SIZE=$(du -h "CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip" | cut -f1)
+          PACKAGE_SIZE=$(du -h "CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip" | cut -f1)
+          PACKAGE_SIZE=$(du -h "CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip" | cut -f1)
+          echo "✅ Package created: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip"
+          echo "✅ Package created: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip"
+          echo "✅ Package created: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip"
+          echo "✅ Package created: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip"
+          echo "📦 Package size: $PACKAGE_SIZE"
+          echo "📦 Package size: $PACKAGE_SIZE"
+          echo "📦 Package size: $PACKAGE_SIZE"
+          echo "📦 Package size: $PACKAGE_SIZE"
+
+
+
+
+      - name: Upload ChromeOS ARCVM Kernel Package
+      - name: Upload ChromeOS ARCVM Kernel Package
+      - name: Upload ChromeOS ARCVM Kernel Package
+      - name: Upload ChromeOS ARCVM Kernel Package
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        with:
+        with:
+        with:
+        with:
+          name: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          path: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip
+          path: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip
+          path: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip
+          path: CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip
+          retention-days: 90
+          retention-days: 90
+          retention-days: 90
+          retention-days: 90
+          compression-level: 0
+          compression-level: 0
+          compression-level: 0
+          compression-level: 0
+
+
+
+
+      - name: Upload bzImage separately
+      - name: Upload bzImage separately
+      - name: Upload bzImage separately
+      - name: Upload bzImage separately
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        with:
+        with:
+        with:
+        with:
+          name: bzImage-ChromeOS-ARCVM-x86_64_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: bzImage-ChromeOS-ARCVM-x86_64_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: bzImage-ChromeOS-ARCVM-x86_64_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: bzImage-ChromeOS-ARCVM-x86_64_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          path: chromeos_kernel_output/bzImage
+          path: chromeos_kernel_output/bzImage
+          path: chromeos_kernel_output/bzImage
+          path: chromeos_kernel_output/bzImage
+          retention-days: 90
+          retention-days: 90
+          retention-days: 90
+          retention-days: 90
+
+
+
+
+      - name: Prepare Modified Kernel Source Tree
+      - name: Prepare Modified Kernel Source Tree
+      - name: Prepare Modified Kernel Source Tree
+      - name: Prepare Modified Kernel Source Tree
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "📦 Preparing modified kernel source tree for distribution..."
+          echo "📦 Preparing modified kernel source tree for distribution..."
+          echo "📦 Preparing modified kernel source tree for distribution..."
+          echo "📦 Preparing modified kernel source tree for distribution..."
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          
+          
+          
+          
+          Remove build artifacts to reduce size
+          Remove build artifacts to reduce size
+          Remove build artifacts to reduce size
+          Remove build artifacts to reduce size
+          echo "🧹 Cleaning build artifacts..."
+          echo "🧹 Cleaning build artifacts..."
+          echo "🧹 Cleaning build artifacts..."
+          echo "🧹 Cleaning build artifacts..."
+          make clean || true
+          make clean || true
+          make clean || true
+          make clean || true
+          make mrproper || true
+          make mrproper || true
+          make mrproper || true
+          make mrproper || true
+          
+          
+          
+          
+          Remove unnecessary files
+          Remove unnecessary files
+          Remove unnecessary files
+          Remove unnecessary files
+          echo "🗑️  Removing unnecessary files..."
+          echo "🗑️  Removing unnecessary files..."
+          echo "🗑️  Removing unnecessary files..."
+          echo "🗑️  Removing unnecessary files..."
+          rm -rf .git 2>/dev/null || true
+          rm -rf .git 2>/dev/null || true
+          rm -rf .git 2>/dev/null || true
+          rm -rf .git 2>/dev/null || true
+          rm -rf susfs4ksu/.git 2>/dev/null || true
+          rm -rf susfs4ksu/.git 2>/dev/null || true
+          rm -rf susfs4ksu/.git 2>/dev/null || true
+          rm -rf susfs4ksu/.git 2>/dev/null || true
+          rm -rf SukiSU_patch/.git 2>/dev/null || true
+          rm -rf SukiSU_patch/.git 2>/dev/null || true
+          rm -rf SukiSU_patch/.git 2>/dev/null || true
+          rm -rf SukiSU_patch/.git 2>/dev/null || true
+          rm -rf KernelSU/.git 2>/dev/null || true
+          rm -rf KernelSU/.git 2>/dev/null || true
+          rm -rf KernelSU/.git 2>/dev/null || true
+          rm -rf KernelSU/.git 2>/dev/null || true
+          
+          
+          
+          
+          Remove patch files (already applied)
+          Remove patch files (already applied)
+          Remove patch files (already applied)
+          Remove patch files (already applied)
+          rm -f *.patch 2>/dev/null || true
+          rm -f *.patch 2>/dev/null || true
+          rm -f *.patch 2>/dev/null || true
+          rm -f *.patch 2>/dev/null || true
+          
+          
+          
+          
+          Remove build logs
+          Remove build logs
+          Remove build logs
+          Remove build logs
+          rm -f build.log 2>/dev/null || true
+          rm -f build.log 2>/dev/null || true
+          rm -f build.log 2>/dev/null || true
+          rm -f build.log 2>/dev/null || true
+          
+          
+          
+          
+          Create source tree info
+          Create source tree info
+          Create source tree info
+          Create source tree info
+          cat > SOURCE_TREE_INFO.txt << 'SOURCEEOF'
+          cat >> SOURCE_TREE_INFO.txt << "EOF"
+          ================================================================================
+          ChromeOS ARCVM x86_64 SukiSU Ultra + SUSFS Kernel
+          Modified Source Tree Package
+          ================================================================================
+
+          📋 Package Information&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          SOURCEEOF
+          
+          cat >> SOURCE_TREE_INFO.txt << EOF
+          Original Kernel Branch &#58; &#36;{{ github.event.inputs.KERNEL_BRANCH }}
+          Android Target Version &#58; &#36;{{ github.event.inputs.ANDROID_VERSION }}
+          Kernel Version        &#58; &#36;{{ github.event.inputs.KERNEL_VERSION }}
+          SukiSU Ultra Version  &#58; &#36;{{ env.KSUVER }}
+          Build Date            &#58; $(date)
+
+          🔧 Applied Modifications&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          ✅ SukiSU Ultra (KernelSU) - Integrated
+          ✅ SUSFS Framework        - Fully Patched
+          ✅ VFS Manual Hooks       - &#36;{{ github.event.inputs.VFS }}
+          ✅ KPM Support            - &#36;{{ github.event.inputs.KPM }}
+          ✅ ZRAM LZ4KD             - &#36;{{ github.event.inputs.ZRAM }}
+          ✅ Hide Stuff Patches     - Applied
+          ✅ Root Detection Bypass  - Configured
+
+          📂 Source Tree Contents&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          • Complete kernel source code with all patches applied
+          • KernelSU integration files
+          • SUSFS framework implementation
+          • Modified kernel configurations
+          • Build scripts and documentation
+
+          🚀 Building This Source&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          1. Extract this archive&#58;
+          tar -xzf ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE.tar.gz
+
+          2. Navigate to source directory&#58;
+          cd kernel_source
+
+          3. Configure kernel (config already modified)&#58;
+          make ARCH=x86_64 chromiumos-x86_64_defconfig
+          OR if using custom config&#58;
+          make ARCH=x86_64 x86_64_defconfig
+
+          4. Build kernel&#58;
+          make ARCH=x86_64 -j\$(nproc) bzImage modules
+
+          5. Install modules (optional)&#58;
+          make ARCH=x86_64 INSTALL_MOD_PATH=/path/to/install modules_install
+
+          6. Find bzImage at&#58;
+          arch/x86/boot/bzImage
+
+          📖 Additional Documentation&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          • KernelSU&#58; ./KernelSU/README.md
+          • SUSFS&#58; ./susfs4ksu/README.md
+          • ChromeOS Kernel&#58; ./Documentation/
+
+          ⚠️  Important Notes&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          • This source tree contains all modifications pre-applied
+          • No additional patching required
+          • Configuration files are pre-modified for SukiSU Ultra + SUSFS
+          • Build on Linux system with kernel build dependencies
+          • Recommended&#58; Ubuntu 22.04+ with build-essential package
+
+          🔗 Resources&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          • SukiSU Ultra&#58; https&#58;//github.com/SukiSU-Ultra/SukiSU-Ultra
+          • SUSFS Project&#58; https&#58;//gitlab.com/simonpunk/susfs4ksu
+          • KernelSU&#58; https&#58;//kernelsu.org
+
+          📜 License&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+          This modified kernel source maintains all original licenses&#58;
+          • Linux Kernel&#58; GPL-2.0
+          • KernelSU&#58; GPL-3.0
+          • SUSFS&#58; GPL-3.0
+          • ChromeOS modifications&#58; BSD/GPL mixed
+
+          ════════════════════════════════════════════════════════════════
+          Generated by ChromeOS ARCVM Kernel Rooting CI/CD Pipeline
+          ════════════════════════════════════════════════════════════════
+          EOF
+          
+          
+          
+          
+          echo "✅ Source tree info created"
+          echo "✅ Source tree info created"
+          echo "✅ Source tree info created"
+          echo "✅ Source tree info created"
+
+
+
+
+      - name: Create Build Instructions Script
+      - name: Create Build Instructions Script
+      - name: Create Build Instructions Script
+      - name: Create Build Instructions Script
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cat > BUILD_INSTRUCTIONS.sh << 'BUILDEOF'
+          !/bin/bash
+          ChromeOS ARCVM x86_64 SukiSU Ultra + SUSFS Kernel Build Script
+          This script automates the kernel building process
+
+          set -e
+
+          echo "╔════════════════════════════════════════════════════════════╗"
+          echo "║   ChromeOS ARCVM Kernel Build Script                      ║"
+          echo "║   SukiSU Ultra + SUSFS Edition                            ║"
+          echo "╚════════════════════════════════════════════════════════════╝"
+          echo ""
+
+          Check dependencies
+          echo "🔍 Checking build dependencies..."
+          DEPS="gcc make bc bison flex libssl-dev libelf-dev"
+          MISSING=""
+
+          for dep in $DEPS; do
+          if ! dpkg -l | grep -q "^ii  $dep"; then
+          MISSING="$MISSING $dep"
+          fi
+          done
+
+          if [ -n "$MISSING" ]; then
+          echo "❌ Missing dependencies&#58;$MISSING"
+          echo "📦 Install with&#58; sudo apt install -y$MISSING"
+          exit 1
+          fi
+
+          echo "✅ All dependencies present"
+          echo ""
+
+          Get CPU cores
+          CORES=$(nproc)
+          echo "🔧 Using $CORES CPU cores for compilation"
+          echo ""
+
+          Configure kernel
+          echo "⚙️  Configuring kernel..."
+          if [ -f arch/x86/configs/chromiumos-x86_64_defconfig ]; then
+          make ARCH=x86_64 chromiumos-x86_64_defconfig
+          elif [ -f arch/x86/configs/chromeos_defconfig ]; then
+          make ARCH=x86_64 chromeos_defconfig
+          else
+          make ARCH=x86_64 x86_64_defconfig
+          fi
+          echo "✅ Kernel configured"
+          echo ""
+
+          Build kernel
+          echo "🔨 Building kernel (this will take 20-40 minutes)..."
+          START_TIME=$(date +%s)
+
+          make ARCH=x86_64 -j$CORES bzImage modules
+
+          END_TIME=$(date +%s)
+          BUILD_TIME=$((END_TIME - START_TIME))
+
+          echo ""
+          echo "✅ Kernel build completed in &#36;{BUILD_TIME} seconds!"
+          echo ""
+
+          Show results
+          if [ -f arch/x86/boot/bzImage ]; then
+          BZIMAGE_PATH="arch/x86/boot/bzImage"
+          elif [ -f arch/x86_64/boot/bzImage ]; then
+          BZIMAGE_PATH="arch/x86_64/boot/bzImage"
+          else
+          echo "❌ bzImage not found!"
+          exit 1
+          fi
+
+          echo "📦 Build Results&#58;"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "bzImage location&#58; $BZIMAGE_PATH"
+          echo "bzImage size&#58; $(du -h $BZIMAGE_PATH | cut -f1)"
+          echo "Build time&#58; &#36;{BUILD_TIME}s ($(($BUILD_TIME / 60))m $(($BUILD_TIME % 60))s)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "🎉 Success! Your ChromeOS ARCVM kernel is ready!"
+          echo ""
+          echo "📋 Next steps&#58;"
+          echo "1. Copy bzImage to your ChromeOS device"
+          echo "2. Follow installation instructions in README.md"
+          echo "3. Install KernelSU Manager in Android container"
+          BUILDEOF
+
+
+
+
+          chmod +x BUILD_INSTRUCTIONS.sh
+          chmod +x BUILD_INSTRUCTIONS.sh
+          chmod +x BUILD_INSTRUCTIONS.sh
+          chmod +x BUILD_INSTRUCTIONS.sh
+          echo "✅ Build script created"
+          echo "✅ Build script created"
+          echo "✅ Build script created"
+          echo "✅ Build script created"
+
+
+
+
+      - name: Calculate Source Tree Size
+      - name: Calculate Source Tree Size
+      - name: Calculate Source Tree Size
+      - name: Calculate Source Tree Size
+        id: source_size
+        id: source_size
+        id: source_size
+        id: source_size
+        run: |
+        run: |
+        run: |
+        run: |
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          cd kernel_source
+          SIZE_BYTES=$(du -sb . | cut -f1)
+          SIZE_BYTES=$(du -sb . | cut -f1)
+          SIZE_BYTES=$(du -sb . | cut -f1)
+          SIZE_BYTES=$(du -sb . | cut -f1)
+          SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
+          SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
+          SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
+          SIZE_MB=$((SIZE_BYTES / 1024 / 1024))
+          echo "size_mb=$SIZE_MB" >> $GITHUB_OUTPUT
+          echo "size_mb=$SIZE_MB" >> $GITHUB_OUTPUT
+          echo "size_mb=$SIZE_MB" >> $GITHUB_OUTPUT
+          echo "size_mb=$SIZE_MB" >> $GITHUB_OUTPUT
+          echo "📊 Source tree size: ${SIZE_MB} MB (uncompressed)"
+          echo "📊 Source tree size: ${SIZE_MB} MB (uncompressed)"
+          echo "📊 Source tree size: ${SIZE_MB} MB (uncompressed)"
+          echo "📊 Source tree size: ${SIZE_MB} MB (uncompressed)"
+
+
+
+
+      - name: Create Source Tree Archive
+      - name: Create Source Tree Archive
+      - name: Create Source Tree Archive
+      - name: Create Source Tree Archive
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "📦 Creating source tree archive..."
+          echo "📦 Creating source tree archive..."
+          echo "📦 Creating source tree archive..."
+          echo "📦 Creating source tree archive..."
+          echo "⏳ This may take 5-10 minutes depending on compression..."
+          echo "⏳ This may take 5-10 minutes depending on compression..."
+          echo "⏳ This may take 5-10 minutes depending on compression..."
+          echo "⏳ This may take 5-10 minutes depending on compression..."
+          
+          
+          
+          
+          Create archive with better compression and progress
+          Create archive with better compression and progress
+          Create archive with better compression and progress
+          Create archive with better compression and progress
+          tar -I "pigz -9" -cf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" \
+          tar -I "pigz -9" -cf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" \
+          tar -I "pigz -9" -cf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" \
+          tar -I "pigz -9" -cf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" \
+              --exclude='*.o' \
+              --exclude='*.o' \
+              --exclude='*.o' \
+              --exclude='*.o' \
+              --exclude='*.ko' \
+              --exclude='*.ko' \
+              --exclude='*.ko' \
+              --exclude='*.ko' \
+              --exclude='.tmp_*' \
+              --exclude='.tmp_*' \
+              --exclude='.tmp_*' \
+              --exclude='.tmp_*' \
+              --exclude='*.cmd' \
+              --exclude='*.cmd' \
+              --exclude='*.cmd' \
+              --exclude='*.cmd' \
+              --exclude='.cache' \
+              --exclude='.cache' \
+              --exclude='.cache' \
+              --exclude='.cache' \
+              --exclude='*.a' \
+              --exclude='*.a' \
+              --exclude='*.a' \
+              --exclude='*.a' \
+              --exclude='*.so' \
+              --exclude='*.so' \
+              --exclude='*.so' \
+              --exclude='*.so' \
+          kernel_source/
+          kernel_source/
+          kernel_source/
+          kernel_source/
+          
+          
+          
+          
+          Calculate final archive size
+          Calculate final archive size
+          Calculate final archive size
+          Calculate final archive size
+          ARCHIVE_SIZE=$(du -h "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" | cut -f1)
+          ARCHIVE_SIZE=$(du -h "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" | cut -f1)
+          ARCHIVE_SIZE=$(du -h "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" | cut -f1)
+          ARCHIVE_SIZE=$(du -h "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" | cut -f1)
+          echo "✅ Archive created: ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz"
+          echo "✅ Archive created: ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz"
+          echo "✅ Archive created: ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz"
+          echo "✅ Archive created: ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz"
+          echo "📦 Archive size: $ARCHIVE_SIZE (compressed)"
+          echo "📦 Archive size: $ARCHIVE_SIZE (compressed)"
+          echo "📦 Archive size: $ARCHIVE_SIZE (compressed)"
+          echo "📦 Archive size: $ARCHIVE_SIZE (compressed)"
+          echo "ARCHIVE_SIZE=$ARCHIVE_SIZE" >> $GITHUB_ENV
+          echo "ARCHIVE_SIZE=$ARCHIVE_SIZE" >> $GITHUB_ENV
+          echo "ARCHIVE_SIZE=$ARCHIVE_SIZE" >> $GITHUB_ENV
+          echo "ARCHIVE_SIZE=$ARCHIVE_SIZE" >> $GITHUB_ENV
+
+
+
+
+      - name: Verify Archive Integrity
+      - name: Verify Archive Integrity
+      - name: Verify Archive Integrity
+      - name: Verify Archive Integrity
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "🔍 Verifying archive integrity..."
+          echo "🔍 Verifying archive integrity..."
+          echo "🔍 Verifying archive integrity..."
+          echo "🔍 Verifying archive integrity..."
+          
+          
+          
+          
+          Test archive
+          Test archive
+          Test archive
+          Test archive
+          if tar -tzf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" > /dev/null 2>1; then
+          if tar -tzf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" > /dev/null 2>1; then
+          if tar -tzf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" > /dev/null 2>1; then
+          if tar -tzf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" > /dev/null 2>1; then
+          echo "✅ Archive integrity verified"
+          echo "✅ Archive integrity verified"
+          echo "✅ Archive integrity verified"
+          echo "✅ Archive integrity verified"
+          else
+          else
+          else
+          else
+          echo "❌ Archive verification failed!"
+          echo "❌ Archive verification failed!"
+          echo "❌ Archive verification failed!"
+          echo "❌ Archive verification failed!"
+          exit 1
+          exit 1
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+          
+          
+          
+          
+          Count files
+          Count files
+          Count files
+          Count files
+          FILE_COUNT=$(tar -tzf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" | wc -l)
+          FILE_COUNT=$(tar -tzf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" | wc -l)
+          FILE_COUNT=$(tar -tzf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" | wc -l)
+          FILE_COUNT=$(tar -tzf "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz" | wc -l)
+          echo "📄 Total files in archive: $FILE_COUNT"
+          echo "📄 Total files in archive: $FILE_COUNT"
+          echo "📄 Total files in archive: $FILE_COUNT"
+          echo "📄 Total files in archive: $FILE_COUNT"
+
+
+
+
+      - name: Generate Source Tree Manifest
+      - name: Generate Source Tree Manifest
+      - name: Generate Source Tree Manifest
+      - name: Generate Source Tree Manifest
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "📋 Generating source tree manifest..."
+          echo "📋 Generating source tree manifest..."
+          echo "📋 Generating source tree manifest..."
+          echo "📋 Generating source tree manifest..."
+          
+          
+          
+          
+          cat > SOURCE_TREE_MANIFEST.txt << 'MANIFESTEOF'
+          +------------------------------------------------------------+
+        |      CHROMEOS ARCVM KERNEL SOURCE TREE MANIFEST             |
+          +------------------------------------------------------------+
+          MANIFESTEOF
+          
+          
+          
+          
+          cat >> SOURCE_TREE_MANIFEST.txt << EOF
+
+          📦 Package Details&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          Archive Name    &#58; ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE&#36;{{ steps.suffix.outputs.value }}.tar.gz
+          Archive Size    &#58; &#36;{{ env.ARCHIVE_SIZE }}
+          Source Size     &#58; &#36;{{ steps.source_size.outputs.size_mb }} MB (uncompressed)
+          Build Date      &#58; $(date)
+          git-commit&#58; &#36;{{ github.sha }}
+          workflow-run&#58; &#36;{{ github.run_number }}
+      
+          build-config&#58;
+          kernel-branch&#58; &#36;{{ github.event.inputs.KERNEL_BRANCH }}
+          android-version&#58; &#36;{{ github.event.inputs.ANDROID_VERSION }}
+          kernel-version&#58; &#36;{{ github.event.inputs.KERNEL_VERSION }}
+          ksu-version&#58; &#36;{{ env.KSUVER }}
+        
+          features&#58;
+          vfs-hooks&#58; &#36;{{ github.event.inputs.VFS == 'true' }}
+          kpm-support&#58; &#36;{{ github.event.inputs.KPM == 'true' }}
+          zram-enhanced&#58; &#36;{{ github.event.inputs.ZRAM == 'true' }}
+          ✅ Documentation
+
+          🔐 Checksums&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          SHA256&#58; $(sha256sum "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE&#36;{{ steps.suffix.outputs.value }}.tar.gz" | cut -d' ' -f1)
+          MD5&#58;    $(md5sum "ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE&#36;{{ steps.suffix.outputs.value }}.tar.gz" | cut -d' ' -f1)
+
+          📖 Quick Start&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          tar -xzf ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE&#36;{{ steps.suffix.outputs.value }}.tar.gz
+          cd kernel_source
+          ./BUILD_INSTRUCTIONS.sh
+
+          ════════════════════════════════════════════════════════════════
+          EOF
+          
+          
+          
+          
+          echo "✅ Manifest created"
+          echo "✅ Manifest created"
+          echo "✅ Manifest created"
+          echo "✅ Manifest created"
+
+
+
+
+      - name: Upload Modified Kernel Source Tree
+      - name: Upload Modified Kernel Source Tree
+      - name: Upload Modified Kernel Source Tree
+      - name: Upload Modified Kernel Source Tree
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        with:
+        with:
+        with:
+        with:
+          name: ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          path: |
+          path: |
+          path: |
+          path: |
+            ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz
+            ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz
+            ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz
+            ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz
+            SOURCE_TREE_MANIFEST.txt
+            SOURCE_TREE_MANIFEST.txt
+            SOURCE_TREE_MANIFEST.txt
+            SOURCE_TREE_MANIFEST.txt
+          retention-days: 90
+          retention-days: 90
+          retention-days: 90
+          retention-days: 90
+          compression-level: 0
+          compression-level: 0
+          compression-level: 0
+          compression-level: 0
+
+
+
+
+      - name: Create Combined Release Package
+      - name: Create Combined Release Package
+      - name: Create Combined Release Package
+      - name: Create Combined Release Package
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "📦 Creating combined release package..."
+          echo "📦 Creating combined release package..."
+          echo "📦 Creating combined release package..."
+          echo "📦 Creating combined release package..."
+          mkdir -p combined_release
+          mkdir -p combined_release
+          mkdir -p combined_release
+          mkdir -p combined_release
+          
+          
+          
+          
+          Copy compiled kernel package
+          Copy compiled kernel package
+          Copy compiled kernel package
+          Copy compiled kernel package
+          cp CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip combined_release/
+          cp CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip combined_release/
+          cp CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip combined_release/
+          cp CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL${{ steps.suffix.outputs.value }}.zip combined_release/
+          
+          
+          
+          
+          Copy source tree archive
+          Copy source tree archive
+          Copy source tree archive
+          Copy source tree archive
+          cp ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz combined_release/
+          cp ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz combined_release/
+          cp ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz combined_release/
+          cp ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE${{ steps.suffix.outputs.value }}.tar.gz combined_release/
+          
+          
+          
+          
+          Copy manifest
+          Copy manifest
+          Copy manifest
+          Copy manifest
+          cp SOURCE_TREE_MANIFEST.txt combined_release/
+          cp SOURCE_TREE_MANIFEST.txt combined_release/
+          cp SOURCE_TREE_MANIFEST.txt combined_release/
+          cp SOURCE_TREE_MANIFEST.txt combined_release/
+          
+          
+          
+          
+          Create master README
+          Create master README
+          Create master README
+          Create master README
+          cat > combined_release/README_COMBINED_RELEASE.txt << 'COMBINEDEOF'
+          +------------------------------------------------------------+
+        |     ChromeOS ARCVM SukiSU Ultra + SUSFS Complete Release    |
+          +------------------------------------------------------------+
+
+          This package contains BOTH&#58;
+
+          📦 1. COMPILED KERNEL PACKAGE (Ready to Install)
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          COMBINEDEOF
+          
+          
+          
+          
+          cat >> combined_release/README_COMBINED_RELEASE.txt << EOF
+          File&#58; CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL&#36;{{ steps.suffix.outputs.value }}.zip
+          Size&#58; ~50-80 MB
+          Contains&#58;
+          • bzImage (ready to install)
+          • Kernel modules
+          • SUSFS module
+          • Installation scripts
+          • Documentation
+
+          Use this if&#58; You want to install immediately on ChromeOS
+
+          📦 2. MODIFIED SOURCE TREE (For Custom Builds)
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          File&#58; ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE&#36;{{ steps.suffix.outputs.value }}.tar.gz
+          Size&#58; &#36;{{ env.ARCHIVE_SIZE }}
+          Contains&#58;
+          • Complete kernel source (patches applied)
+          • KernelSU integration
+          • SUSFS framework
+          • Build scripts
+          • Pre-configured settings
+
+          Use this if&#58; You want to customize or rebuild the kernel
+
+          🚀 Quick Installation (Compiled Package)&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          1. Extract&#58; CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA-SUSFS-KERNEL&#36;{{ steps.suffix.outputs.value }}.zip
+          2. Run&#58; ./install_chromeos.sh
+          3. Reboot and enjoy root access!
+
+          🔨 Building from Source&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          1. Extract&#58; ARCVM_x86_64_SUKISU-ULTRA+SUSFS_KERNEL_SOURCE&#36;{{ steps.suffix.outputs.value }}.tar.gz
+          2. cd kernel_source
+          3. ./BUILD_INSTRUCTIONS.sh
+          4. Find bzImage in arch/x86/boot/
+
+          📋 Build Information&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          Build Date      &#58; $(date)
+          KSU Version     &#58; &#36;{{ env.KSUVER }}
+          Kernel Branch   &#58; &#36;{{ github.event.inputs.KERNEL_BRANCH }}
+          Features        &#58; VFS&#58;&#36;{{ github.event.inputs.VFS }} KPM&#58;&#36;{{ github.event.inputs.KPM }} ZRAM&#58;&#36;{{ github.event.inputs.ZRAM }}
+
+          ⚠️  Important&#58;
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          • Requires ChromeOS Developer Mode
+          • Voids warranty
+          • Backup your data before installation
+          • For x86_64 architecture only
+
+          ════════════════════════════════════════════════════════════════
+          For support and updates, visit the GitHub repository
+          ════════════════════════════════════════════════════════════════
+          EOF
+          
+          
+          
+          
+          echo "✅ Combined release package created"
+          echo "✅ Combined release package created"
+          echo "✅ Combined release package created"
+          echo "✅ Combined release package created"
+
+
+
+
+      - name: Upload Complete Combined Package
+      - name: Upload Complete Combined Package
+      - name: Upload Complete Combined Package
+      - name: Upload Complete Combined Package
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        with:
+        with:
+        with:
+        with:
+          name: COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          name: COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
+          path: combined_release/*
+          path: combined_release/*
+          path: combined_release/*
+          path: combined_release/*
+          retention-days: 90
+          retention-days: 90
+          retention-days: 90
+          retention-days: 90
+
+
+
+
+      - name: Generate Build Summary
+      - name: Generate Build Summary
+      - name: Generate Build Summary
+      - name: Generate Build Summary
+        run: |
+        run: |
+        run: |
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'SUMMARYEOF'
+          +------------------------------------------------------------+
+        |          BUILD COMPLETED SUCCESSFULLY ✅                     |
+          +------------------------------------------------------------+
+
+          📦 Available Downloads
+
+          1️⃣ Compiled Kernel Package (Ready to Install)
+          SUMMARYEOF
+          
+          
+          
+          
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+  - **Artifact&#58;** `CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_&#36;{{ env.KSUVER }}&#36;{{ steps.suffix.outputs.value }}`
+  - **Size&#58;** ~50-80 MB
+  - **Contains&#58;** bzImage, modules, SUSFS, scripts
+
+          2️⃣ Modified Source Tree (For Custom Builds)
+  - **Artifact&#58;** `ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_&#36;{{ env.KSUVER }}&#36;{{ steps.suffix.outputs.value }}`
+  - **Size&#58;** &#36;{{ env.ARCHIVE_SIZE }}
+  - **Contains&#58;** Complete kernel source with patches applied
+
+          3️⃣ Complete Combined Package
+  - **Artifact&#58;** `COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_&#36;{{ env.KSUVER }}&#36;{{ steps.suffix.outputs.value }}`
+  - **Contains&#58;** Both compiled kernel + source tree
+
+          ✨ Build Configuration
+
+        | Setting | Value |
+        |---------|-------|
+        | Kernel Branch | `&#36;{{ github.event.inputs.KERNEL_BRANCH }}` |
+        | Android Version | `&#36;{{ github.event.inputs.ANDROID_VERSION }}` |
+        | KSU Version | `&#36;{{ env.KSUVER }}` |
+        | VFS Hooks | &#36;{{ github.event.inputs.VFS == 'true'  '✅' || '❌' }} |
+        | KPM | &#36;{{ github.event.inputs.KPM == 'true'  '✅' || '❌' }} |
+        | ZRAM | &#36;{{ github.event.inputs.ZRAM == 'true'  '✅' || '❌' }} |
+        | Build Time | `&#36;{{ env.BUILD_TIME }}s` |
+
+          🎯 Quick Download
+
+          ```bash
+          Download all artifacts
+          gh run download &#36;{{ github.run_id }}
+
+          Or download specific artifact&#58;
+          gh run download &#36;{{ github.run_id }} -n COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_&#36;{{ env.KSUVER }}&#36;{{ steps.suffix.outputs.value }}
+          ```
+
+          📊 Build Statistics
+
+  - **Source Tree Size&#58;** &#36;{{ steps.source_size.outputs.size_mb }} MB (uncompressed)
+  - **Compressed Archive&#58;** &#36;{{ env.ARCHIVE_SIZE }}
+  - **Total Artifacts&#58;** 4
+  - **Workflow Run&#58;** &#36;{{ github.run_number }}
+
+          EOF
+          
+          
+          
+          
+          echo "✅ Build summary generated"
+          echo "✅ Build summary generated"
+          echo "✅ Build summary generated"
+          echo "✅ Build summary generated"
+
+
+
+
+      - name: Final Success Message
+      - name: Final Success Message
+      - name: Final Success Message
+      - name: Final Success Message
+        run: |
+        run: |
+        run: |
+        run: |
+          echo "+------------------------------------------------------------+"
+          echo "+------------------------------------------------------------+"
+          echo "+------------------------------------------------------------+"
+          echo "+------------------------------------------------------------+"
+          echo "|                                                            |"
+          echo "|                                                            |"
+          echo "|                                                            |"
+          echo "|                                                            |"
+          echo "|   ✅ ChromeOS ARCVM SukiSU Ultra Build Complete! ✅       |"
+          echo "|   ✅ ChromeOS ARCVM SukiSU Ultra Build Complete! ✅       |"
+          echo "|   ✅ ChromeOS ARCVM SukiSU Ultra Build Complete! ✅       |"
+          echo "|   ✅ ChromeOS ARCVM SukiSU Ultra Build Complete! ✅       |"
+          echo "|                                                            |"
+          echo "|                                                            |"
+          echo "|                                                            |"
+          echo "|                                                            |"
+          echo "+------------------------------------------------------------+"
+          echo "+------------------------------------------------------------+"
+          echo "+------------------------------------------------------------+"
+          echo "+------------------------------------------------------------+"
+          echo ""
+          echo ""
+          echo ""
+          echo ""
+          echo "📦 Available Artifacts:"
+          echo "📦 Available Artifacts:"
+          echo "📦 Available Artifacts:"
+          echo "📦 Available Artifacts:"
+          echo "  1. Compiled Kernel Package"
+          echo "  1. Compiled Kernel Package"
+          echo "  1. Compiled Kernel Package"
+          echo "  1. Compiled Kernel Package"
+          echo "  2. Standalone bzImage"
+          echo "  2. Standalone bzImage"
+          echo "  2. Standalone bzImage"
+          echo "  2. Standalone bzImage"
+          echo "  3. Modified Source Tree"
+          echo "  3. Modified Source Tree"
+          echo "  3. Modified Source Tree"
+          echo "  3. Modified Source Tree"
+          echo "  4. Complete Combined Package"
+          echo "  4. Complete Combined Package"
+          echo "  4. Complete Combined Package"
+          echo "  4. Complete Combined Package"
+          echo ""
+          echo ""
+          echo ""
+          echo ""
+          echo "🎉 All artifacts ready for download!"
+          echo "🎉 All artifacts ready for download!"
+          echo "🎉 All artifacts ready for download!"
+          echo "🎉 All artifacts ready for download!"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+          echo "════════════════════════════════════════════════════════════"
+
+
+
+
+
