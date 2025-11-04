@@ -336,22 +336,34 @@ jobs:
           mkdir -p arch/x86/configs
           
           
-          # Fix format string issue directly in the file
-          # Fix format string issue directly in the file
-          sed -i 's/printk_deferred_once("suspected host suspend. cpu %d rt_time (%ld)\\n",/printk_deferred_once("suspected host suspend. cpu %d rt_time (%llu)\\n",/' kernel/sched/rt.c
-          sed -i 's/printk_deferred_once("suspected host suspend. cpu %d rt_time (%ld)\\n",/printk_deferred_once("suspected host suspend. cpu %d rt_time (%llu)\\n",/' kernel/sched/rt.c
+          # Fix format string issue in RT scheduler
+          # Fix format string issue in RT scheduler
+          if [ -f "kernel/sched/rt.c" ]; then
+          if [ -f "kernel/sched/rt.c" ]; then
+          echo "Fixing format string in RT scheduler..."
+          echo "Fixing format string in RT scheduler..."
+          sed -i 's/%d rt_time (%ld)/%d rt_time (%llu)/' kernel/sched/rt.c
+          sed -i 's/%d rt_time (%ld)/%d rt_time (%llu)/' kernel/sched/rt.c
+          echo "✅ Format string fixed"
+          echo "✅ Format string fixed"
+          else
+          else
+          echo "⚠️ RT scheduler file not found at expected location"
+          echo "⚠️ RT scheduler file not found at expected location"
+          fi
+          fi
           
           
-          # Apply the patch with more verbose output and force
-          # Apply the patch with more verbose output and force
-          patch -p1 --verbose < rt-format-fix.patch || true
-          patch -p1 --verbose < rt-format-fix.patch || true
-          
-          
-          # Apply the format fix patch
-          # Apply the format fix patch
-          patch -p1 < rt-format-fix.patch
-          patch -p1 < rt-format-fix.patch
+          # Verify kernel/sched/rt.c exists and is writable
+          # Verify kernel/sched/rt.c exists and is writable
+          if [ ! -w "kernel/sched/rt.c" ]; then
+          if [ ! -w "kernel/sched/rt.c" ]; then
+          echo "⚠️ Warning: kernel/sched/rt.c is not writable or doesn't exist"
+          echo "⚠️ Warning: kernel/sched/rt.c is not writable or doesn't exist"
+          find . -name "rt.c" -type f
+          find . -name "rt.c" -type f
+          fi
+          fi
           
           
           # Create arch/x86/configs directory if it doesn't exist
