@@ -146,8 +146,54 @@ jobs:
         run: |
           echo "📥 Cloning SUSFS and patch repositories..."
           
-          # Clone SUSFS repository with correct branch
-          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}
+          # Clone SUSFS repository with correct branch and retry mechanism
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          SUSFS_BRANCH="gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}"
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "🔄 Cloning SUSFS repository (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
+            if git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"; then
+              echo "✅ SUSFS repository cloned successfully"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to clone SUSFS repository after $MAX_RETRIES attempts"
+                echo "Branch: $SUSFS_BRANCH"
+                echo "Available branches:"
+                git ls-remote --heads https://gitlab.com/simonpunk/susfs4ksu.git | sed 's/.*refs\/heads\///'
+                exit 1
+              fi
+              echo "⚠️ Clone failed, retrying in 5 seconds..."
+              rm -rf susfs4ksu
+              sleep 5
+            fi
+          done
+          
+          # Verify SUSFS repository contents
+          echo "🔍 Verifying SUSFS repository..."
+          cd susfs4ksu
+          echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo "Checking for required files..."
+          
+          REQUIRED_FILES=(
+            "kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+            "kernel_patches/fs"
+            "kernel_patches/include/linux"
+          )
+          
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -e "$file" ]; then
+              echo "❌ Required file/directory not found: $file"
+              echo "Repository contents:"
+              ls -R
+              exit 1
+            fi
+          done
+          
+          echo "✅ SUSFS repository verified"
+          cd ..
           
           # Clone SukiSU patch repository with fallback methods
           if ! git clone https://github.com/ShirkNeko/SukiSU_patch.git; then
@@ -182,6 +228,8 @@ jobs:
       # Apply SUSFS Patches
       - name: Apply SUSFS Patches to ChromeOS Kernel
         run: |
+          # Store original working directory
+          ORIGINAL_DIR="$PWD"
           cd $BUILD_DIR/source
           echo "🔨 Preparing SUSFS patches..."
           
@@ -194,12 +242,35 @@ jobs:
             tar czf ../linux_headers_backup.tar.gz include/linux/
           fi
           
-          # Copy SUSFS files
+          # Copy SUSFS files with absolute paths
           echo "📝 Copying SUSFS files..."
-          PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          SUSFS_DIR="$ORIGINAL_DIR/susfs4ksu"
+          PATCH_FILE="$SUSFS_DIR/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          
+          # Verify SUSFS patch exists
+          if [ ! -f "$PATCH_FILE" ]; then
+            echo "❌ SUSFS patch not found at: $PATCH_FILE"
+            echo "Contents of $SUSFS_DIR/kernel_patches/:"
+            ls -la "$SUSFS_DIR/kernel_patches/" || echo "Directory not found!"
+            exit 1
+          fi
+          
+          # Copy patch and verify source directories
           cp "$PATCH_FILE" ./
-          cp -r ../susfs4ksu/kernel_patches/fs/* ./fs/
-          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
+          
+          if [ -d "$SUSFS_DIR/kernel_patches/fs" ]; then
+            cp -r "$SUSFS_DIR/kernel_patches/fs/"* ./fs/
+          else
+            echo "❌ SUSFS fs patches directory not found!"
+            exit 1
+          fi
+          
+          if [ -d "$SUSFS_DIR/kernel_patches/include/linux" ]; then
+            cp -r "$SUSFS_DIR/kernel_patches/include/linux/"* ./include/linux/
+          else
+            echo "❌ SUSFS include patches directory not found!"
+            exit 1
+          fi
           
           # Apply SUSFS patch with detailed logging
           echo "🔧 Applying SUSFS patch..."
