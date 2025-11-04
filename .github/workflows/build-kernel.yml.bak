@@ -472,6 +472,10 @@ jobs:
           BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
           mkdir -p "$BACKUP_DIR"
           mkdir -p "$BACKUP_DIR"
+          mkdir -p "./common/fs"
+          mkdir -p "./common/fs"
+          mkdir -p "./common/include/linux"
+          mkdir -p "./common/include/linux"
           
           
           if [ -d "./common/fs" ]; then
@@ -494,32 +498,36 @@ jobs:
           PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
           
           
+          # Verify patch file exists
+          # Verify patch file exists
+          if [ ! -f "$PATCH_FILE" ]; then
+          if [ ! -f "$PATCH_FILE" ]; then
+          echo "❌ SUSFS patch file not found: $PATCH_FILE"
+          echo "❌ SUSFS patch file not found: $PATCH_FILE"
+          ls -la ../susfs4ksu/kernel_patches/
+          ls -la ../susfs4ksu/kernel_patches/
+          exit 1
+          exit 1
+          fi
+          fi
+          
+          
           # Copy files following the OnePlus workflow pattern
           # Copy files following the OnePlus workflow pattern
-          cp "$PATCH_FILE" ./common/
-          cp "$PATCH_FILE" ./common/
-          cp -r ../susfs4ksu/kernel_patches/fs/* ./common/fs/
-          cp -r ../susfs4ksu/kernel_patches/fs/* ./common/fs/
-          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+          cp -f "$PATCH_FILE" ./common/
+          cp -f "$PATCH_FILE" ./common/
+          cp -rf ../susfs4ksu/kernel_patches/fs/* ./common/fs/
+          cp -rf ../susfs4ksu/kernel_patches/fs/* ./common/fs/
+          cp -rf ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+          cp -rf ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           
           
           cd ./common
           cd ./common
-          echo "🔨 Applying SUSFS patch..."
-          echo "🔨 Applying SUSFS patch..."
-          patch -p1 < "50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" || true
-          patch -p1 < "50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" || true
-          echo "✅ SUSFS patches applied"
-          echo "✅ SUSFS patches applied"
-          
-          
-          # Apply SUSFS patch with detailed logging
-          # Apply SUSFS patch with detailed logging
-          echo "🔧 Applying SUSFS patch..."
-          echo "🔧 Applying SUSFS patch..."
-          if ! patch -p1 --dry-run < "$(basename "$PATCH_FILE")" > patch_test.log 2>&1; then
-          if ! patch -p1 --dry-run < "$(basename "$PATCH_FILE")" > patch_test.log 2>&1; then
+          echo "� Applying SUSFS patch..."
+          echo "� Applying SUSFS patch..."
+          if ! patch -p1 --dry-run -F 3 < "$(basename "$PATCH_FILE")" > patch_test.log 2>&1; then
+          if ! patch -p1 --dry-run -F 3 < "$(basename "$PATCH_FILE")" > patch_test.log 2>&1; then
           echo "⚠️ Patch dry-run showed conflicts:"
           echo "⚠️ Patch dry-run showed conflicts:"
           cat patch_test.log
@@ -534,22 +542,44 @@ jobs:
           cat patch_apply.log
           # Restore backups
           # Restore backups
-          tar xzf ../fs_backup.tar.gz
-          tar xzf ../fs_backup.tar.gz
-          tar xzf ../linux_headers_backup.tar.gz
-          tar xzf ../linux_headers_backup.tar.gz
+          for dir in fs include/linux; do
+          for dir in fs include/linux; do
+          if [ -d "$BACKUP_DIR/$dir" ]; then
+          if [ -d "$BACKUP_DIR/$dir" ]; then
+          rm -rf "./$dir"
+          rm -rf "./$dir"
+          cp -r "$BACKUP_DIR/$dir" "./"
+          cp -r "$BACKUP_DIR/$dir" "./"
+          fi
+          fi
+          done
+          done
           exit 1
           exit 1
           fi
           fi
           else
           else
-          patch -p1 < "$(basename "$PATCH_FILE")"
-          patch -p1 < "$(basename "$PATCH_FILE")"
+          patch -p1 -F 3 < "$(basename "$PATCH_FILE")"
+          patch -p1 -F 3 < "$(basename "$PATCH_FILE")"
           fi
           fi
+          
+          
+          # Verify patch success
+          # Verify patch success
+          if [ $? -eq 0 ]; then
+          if [ $? -eq 0 ]; then
           echo "✅ SUSFS patches applied successfully"
           echo "✅ SUSFS patches applied successfully"
+          else
+          else
+          echo "❌ Failed to apply SUSFS patches"
+          echo "❌ Failed to apply SUSFS patches"
+          exit 1
+          exit 1
+          fi
+          fi
 
 
           # Apply Hide Stuff Patches
