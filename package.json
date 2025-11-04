@@ -1,0 +1,17 @@
+{
+  "name": "chromeos-arcvm-sukisu-ultra-kernel-tests",
+  "version": "1.0.0",
+  "description": "Playwright tests for ChromeOS ARCVM SukiSU Ultra Kernel",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^20.9.0",
+    "typescript": "^5.2.2"
+  }
+}

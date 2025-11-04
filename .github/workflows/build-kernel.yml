@@ -422,17 +422,17 @@ jobs:
           
           # Create info file
           cd ../chromeos_kernel_output
-          cat > KERNEL_INFO.txt << 'KERNELINFO'
-            ================================================================================
-                               ChromeOS ARCVM x86_64 SukiSU Ultra Kernel                    
-            ================================================================================
+          cat > KERNEL_INFO.txt << EOF
+╔════════════════════════════════════════════════════════════╗
+║      ChromeOS ARCVM x86_64 SukiSU Ultra Kernel            ║
+╚════════════════════════════════════════════════════════════╝
 
-            Build Information:
-            --------------------------------------------------------------------------------
-            Kernel Branch       : ${{ github.event.inputs.KERNEL_BRANCH }}
-            Android Version     : ${{ github.event.inputs.ANDROID_VERSION }}
-            Kernel Version      : ${{ github.event.inputs.KERNEL_VERSION }}
-            SukiSU Ultra Version: ${{ env.KSUVER }}
+📋 Build Information:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Kernel Branch       : ${{ github.event.inputs.KERNEL_BRANCH }}
+Android Version     : ${{ github.event.inputs.ANDROID_VERSION }}
+Kernel Version      : ${{ github.event.inputs.KERNEL_VERSION }}
+SukiSU Ultra Version: ${{ env.KSUVER }}
 Build Date          : $(date)
 Build Time          : ${{ env.BUILD_TIME }}s
 
@@ -515,9 +515,9 @@ EOF
 
 set -e
 
-echo "+------------------------------------------------------------+"
-echo "|        ChromeOS ARCVM SukiSU Ultra Installer              |"
-echo "+------------------------------------------------------------+"
+echo "╔════════════════════════════════════════════════════════════╗"
+echo "║        ChromeOS ARCVM SukiSU Ultra Installer              ║"
+echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
 echo "⚠️  WARNING: This will modify your ChromeOS kernel!"
 echo "    Make sure you have a backup before proceeding."
@@ -574,8 +574,8 @@ read -p "Reboot now? (yes/no): " reboot_confirm
 
 if [ "$reboot_confirm" = "yes" ]; then
     sudo reboot
-          fi
-          INSTALLEOF
+fi
+INSTALLEOF
           chmod +x install_chromeos.sh
           echo "✅ Installation script created"
 
@@ -787,11 +787,10 @@ READMEEOF
           
           # Create source tree info
           cat > SOURCE_TREE_INFO.txt << 'SOURCEEOF'
-          cat >> SOURCE_TREE_INFO.txt << "EOF"
-================================================================================
-                ChromeOS ARCVM x86_64 SukiSU Ultra + SUSFS Kernel
-                         Modified Source Tree Package
-================================================================================
+╔════════════════════════════════════════════════════════════╗
+║   ChromeOS ARCVM x86_64 SukiSU Ultra + SUSFS Kernel       ║
+║            Modified Source Tree Package                     ║
+╚════════════════════════════════════════════════════════════╝
 
 📋 Package Information:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1032,10 +1031,10 @@ BUILDEOF
           echo "📋 Generating source tree manifest..."
           
           cat > SOURCE_TREE_MANIFEST.txt << 'MANIFESTEOF'
-          +------------------------------------------------------------+
-          |      CHROMEOS ARCVM KERNEL SOURCE TREE MANIFEST             |
-          +------------------------------------------------------------+
-          MANIFESTEOF
+╔════════════════════════════════════════════════════════════╗
+║      CHROMEOS ARCVM KERNEL SOURCE TREE MANIFEST           ║
+╚════════════════════════════════════════════════════════════╝
+MANIFESTEOF
           
           cat >> SOURCE_TREE_MANIFEST.txt << EOF
 
@@ -1112,11 +1111,11 @@ EOF
           
           # Create master README
           cat > combined_release/README_COMBINED_RELEASE.txt << 'COMBINEDEOF'
-          +------------------------------------------------------------+
-          |     ChromeOS ARCVM SukiSU Ultra + SUSFS Complete Release    |
-          +------------------------------------------------------------+
+╔════════════════════════════════════════════════════════════╗
+║     ChromeOS ARCVM SukiSU Ultra + SUSFS Complete Release  ║
+╚════════════════════════════════════════════════════════════╝
 
-          This package contains BOTH:
+This package contains BOTH:
 
 📦 1. COMPILED KERNEL PACKAGE (Ready to Install)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1191,50 +1190,50 @@ EOF
       - name: Generate Build Summary
         run: |
           cat >> $GITHUB_STEP_SUMMARY << 'SUMMARYEOF'
-          +------------------------------------------------------------+
-          |          BUILD COMPLETED SUCCESSFULLY ✅                     |
-          +------------------------------------------------------------+
+╔════════════════════════════════════════════════════════════╗
+║          BUILD COMPLETED SUCCESSFULLY ✅                   ║
+╚════════════════════════════════════════════════════════════╝
 
-          ## 📦 Available Downloads
+## 📦 Available Downloads
 
-          ### 1️⃣ Compiled Kernel Package (Ready to Install)
+### 1️⃣ Compiled Kernel Package (Ready to Install)
 SUMMARYEOF
           
           cat >> $GITHUB_STEP_SUMMARY << EOF
-- **Artifact:** `CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}`
+- **Artifact:** \`CHROMEBOOK-ARCVM-x86_64-SUKISU-ULTRA_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}\`
 - **Size:** ~50-80 MB
 - **Contains:** bzImage, modules, SUSFS, scripts
 
 ### 2️⃣ Modified Source Tree (For Custom Builds)
-- **Artifact:** `ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}`
+- **Artifact:** \`ARCVM-x86_64-SUKISU-ULTRA-SUSFS-SOURCE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}\`
 - **Size:** ${{ env.ARCHIVE_SIZE }}
 - **Contains:** Complete kernel source with patches applied
 
 ### 3️⃣ Complete Combined Package
-- **Artifact:** `COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}`
+- **Artifact:** \`COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}\`
 - **Contains:** Both compiled kernel + source tree
 
-          ## ✨ Build Configuration
+## ✨ Build Configuration
 
-          | Setting | Value |
-          |---------|-------|
-          | Kernel Branch | `${{ github.event.inputs.KERNEL_BRANCH }}` |
-          | Android Version | `${{ github.event.inputs.ANDROID_VERSION }}` |
-          | KSU Version | `${{ env.KSUVER }}` |
-          | VFS Hooks | ${{ github.event.inputs.VFS == 'true' && '✅' || '❌' }} |
-          | KPM | ${{ github.event.inputs.KPM == 'true' && '✅' || '❌' }} |
-          | ZRAM | ${{ github.event.inputs.ZRAM == 'true' && '✅' || '❌' }} |
-          | Build Time | `${{ env.BUILD_TIME }}s` |
+| Setting | Value |
+|---------|-------|
+| Kernel Branch | \`${{ github.event.inputs.KERNEL_BRANCH }}\` |
+| Android Version | \`${{ github.event.inputs.ANDROID_VERSION }}\` |
+| KSU Version | \`${{ env.KSUVER }}\` |
+| VFS Hooks | ${{ github.event.inputs.VFS == 'true' && '✅' || '❌' }} |
+| KPM | ${{ github.event.inputs.KPM == 'true' && '✅' || '❌' }} |
+| ZRAM | ${{ github.event.inputs.ZRAM == 'true' && '✅' || '❌' }} |
+| Build Time | ${{ env.BUILD_TIME }}s ($((${{ env.BUILD_TIME }} / 60))m) |
 
-          ## 🎯 Quick Download
+## 🎯 Quick Download
 
-```bash
+\`\`\`bash
 # Download all artifacts
 gh run download ${{ github.run_id }}
 
 # Or download specific artifact:
 gh run download ${{ github.run_id }} -n COMPLETE-ARCVM-SUKISU-ULTRA-PACKAGE_${{ env.KSUVER }}${{ steps.suffix.outputs.value }}
-```
+\`\`\`
 
 ## 📊 Build Statistics
 
@@ -1249,11 +1248,11 @@ EOF
 
       - name: Final Success Message
         run: |
-          echo "+------------------------------------------------------------+"
-          echo "|                                                            |"
-          echo "|   ✅ ChromeOS ARCVM SukiSU Ultra Build Complete! ✅       |"
-          echo "|                                                            |"
-          echo "+------------------------------------------------------------+"
+          echo "╔════════════════════════════════════════════════════════════╗"
+          echo "║                                                            ║"
+          echo "║   ✅ ChromeOS ARCVM SukiSU Ultra Build Complete! ✅       ║"
+          echo "║                                                            ║"
+          echo "╚════════════════════════════════════════════════════════════╝"
           echo ""
           echo "📦 Available Artifacts:"
           echo "  1. Compiled Kernel Package"
