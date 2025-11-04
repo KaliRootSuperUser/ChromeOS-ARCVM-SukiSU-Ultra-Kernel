@@ -156,50 +156,110 @@ jobs:
           cd kernel
           
           
-      - name: Apply patches
-      - name: Apply patches
+      - name: Clone SUSFS and Patch Files
+      - name: Clone SUSFS and Patch Files
         run: |
         run: |
-          echo "Applying SukiSU Ultra patches..."
-          echo "Applying SukiSU Ultra patches..."
-          git apply --ignore-whitespace ../patches/50_add_sukisu_ultra.patch
-          git apply --ignore-whitespace ../patches/50_add_sukisu_ultra.patch
+          echo "📥 Cloning SUSFS and patch repositories..."
+          echo "📥 Cloning SUSFS and patch repositories..."
           
           
-          echo "Applying SUSFS patches..."
-          echo "Applying SUSFS patches..."
-          git apply --ignore-whitespace ../patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch
-          git apply --ignore-whitespace ../patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch
+          # Clone required repositories
+          # Clone required repositories
+          git clone https://github.com/HuskyDG/susfs4ksu.git --depth=1
+          git clone https://github.com/HuskyDG/susfs4ksu.git --depth=1
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1
           
           
-          if [[ "${{ github.event.inputs.VFS_HOOKS }}" == "true" ]]; then
-          if [[ "${{ github.event.inputs.VFS_HOOKS }}" == "true" ]]; then
-          echo "Enabling VFS hooks..."
-          echo "Enabling VFS hooks..."
-          git apply --ignore-whitespace ../patches/51_enable_vfs_hooks.patch
-          git apply --ignore-whitespace ../patches/51_enable_vfs_hooks.patch
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+          echo "❌ Patch repositories clone failed!"
+          echo "❌ Patch repositories clone failed!"
+          exit 1
+          exit 1
+          fi
+          fi
+          
+          
+          echo "✅ SUSFS and patch repositories cloned"
+          echo "✅ SUSFS and patch repositories cloned"
+
+
+      - name: Apply SUSFS Patches to ChromeOS Kernel
+      - name: Apply SUSFS Patches to ChromeOS Kernel
+        run: |
+        run: |
+          cd kernel
+          cd kernel
+          echo "🔨 Applying SUSFS patches to ChromeOS kernel..."
+          echo "🔨 Applying SUSFS patches to ChromeOS kernel..."
+          
+          
+          # Verify patch file exists
+          # Verify patch file exists
+          PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          if [ ! -f "$PATCH_FILE" ]; then
+          if [ ! -f "$PATCH_FILE" ]; then
+          echo "❌ SUSFS patch file not found: $PATCH_FILE"
+          echo "❌ SUSFS patch file not found: $PATCH_FILE"
+          exit 1
+          exit 1
+          fi
+          fi
+          
+          
+          # Copy SUSFS patches
+          # Copy SUSFS patches
+          cp "$PATCH_FILE" ./
+          cp "$PATCH_FILE" ./
+          cp -r ../susfs4ksu/kernel_patches/fs/* ./fs/ 2>/dev/null || true
+          cp -r ../susfs4ksu/kernel_patches/fs/* ./fs/ 2>/dev/null || true
+          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/ 2>/dev/null || true
+          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/ 2>/dev/null || true
+          
+          
+          # Apply SukiSU patches
+          # Apply SukiSU patches
+          git apply --ignore-whitespace "$PATCH_FILE"
+          git apply --ignore-whitespace "$PATCH_FILE"
+          git apply --ignore-whitespace ../SukiSU_patch/sukisu_ultra_core.patch
+          git apply --ignore-whitespace ../SukiSU_patch/sukisu_ultra_core.patch
+          
+          
+          if [[ "${{ github.event.inputs.VFS }}" == "true" ]]; then
+          if [[ "${{ github.event.inputs.VFS }}" == "true" ]]; then
+          echo "🔧 Enabling VFS manual hooks..."
+          echo "🔧 Enabling VFS manual hooks..."
+          git apply --ignore-whitespace ../SukiSU_patch/vfs_manual_hooks.patch
+          git apply --ignore-whitespace ../SukiSU_patch/vfs_manual_hooks.patch
           fi
           fi
           
           
           if [[ "${{ github.event.inputs.KPM }}" == "true" ]]; then
           if [[ "${{ github.event.inputs.KPM }}" == "true" ]]; then
-          echo "Enabling KPM support..."
-          echo "Enabling KPM support..."
-          git apply --ignore-whitespace ../patches/52_enable_kpm.patch
-          git apply --ignore-whitespace ../patches/52_enable_kpm.patch
+          echo "🔧 Enabling KPM support..."
+          echo "🔧 Enabling KPM support..."
+          git apply --ignore-whitespace ../SukiSU_patch/kpm_support.patch
+          git apply --ignore-whitespace ../SukiSU_patch/kpm_support.patch
           fi
           fi
           
           
           if [[ "${{ github.event.inputs.ZRAM }}" == "true" ]]; then
           if [[ "${{ github.event.inputs.ZRAM }}" == "true" ]]; then
-          echo "Enabling ZRAM enhancement..."
-          echo "Enabling ZRAM enhancement..."
-          git apply --ignore-whitespace ../patches/53_enable_zram_enhancement.patch
-          git apply --ignore-whitespace ../patches/53_enable_zram_enhancement.patch
+          echo "🔧 Enabling ZRAM enhancement..."
+          echo "🔧 Enabling ZRAM enhancement..."
+          git apply --ignore-whitespace ../SukiSU_patch/zram_enhancement.patch
+          git apply --ignore-whitespace ../SukiSU_patch/zram_enhancement.patch
           fi
           fi
+          
+          
+          echo "✅ All patches applied successfully"
+          echo "✅ All patches applied successfully"
           
           
       - name: Configure kernel
