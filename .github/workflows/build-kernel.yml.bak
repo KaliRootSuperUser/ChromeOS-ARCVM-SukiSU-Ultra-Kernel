@@ -290,148 +290,142 @@ jobs:
       - name: Clone SUSFS and Patch Repositories
         run: |
         run: |
-          echo "📥 Cloning SUSFS and patch repositories into kernel_workspace..."
-          echo "📥 Cloning SUSFS and patch repositories into kernel_workspace..."
+          set -euo pipefail
+          set -euo pipefail
 
 
-          # Work in kernel_workspace so later steps can reference ../susfs4ksu from kernel_workspace/kernel_platform
-          # Work in kernel_workspace so later steps can reference ../susfs4ksu from kernel_workspace/kernel_platform
+          echo "📥 Cloning SUSFS and patch repositories into kernel_workspace..."
+          echo "📥 Cloning SUSFS and patch repositories into kernel_workspace..."
           mkdir -p kernel_workspace
           mkdir -p kernel_workspace
           cd kernel_workspace
           cd kernel_workspace
 
 
-          # Clone SUSFS repository with correct branch and retry mechanism
-          # Clone SUSFS repository with correct branch and retry mechanism
-          MAX_RETRIES=3
-          MAX_RETRIES=3
-          RETRY_COUNT=0
-          RETRY_COUNT=0
+          # SUSFS repo settings
+          # SUSFS repo settings
+          SUSFS_URL="https://gitlab.com/simonpunk/susfs4ksu.git"
+          SUSFS_URL="https://gitlab.com/simonpunk/susfs4ksu.git"
           SUSFS_BRANCH="gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}"
           SUSFS_BRANCH="gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}"
 
 
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-          echo "🔄 Cloning SUSFS repository (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
-          echo "🔄 Cloning SUSFS repository (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
-          if git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"; then
-          if git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"; then
-          echo "✅ SUSFS repository cloned successfully into $(pwd)/susfs4ksu"
-          echo "✅ SUSFS repository cloned successfully into $(pwd)/susfs4ksu"
-          break
-          break
-          else
-          else
-          RETRY_COUNT=$((RETRY_COUNT + 1))
-          RETRY_COUNT=$((RETRY_COUNT + 1))
-          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-          echo "❌ Failed to clone SUSFS repository after $MAX_RETRIES attempts"
-          echo "❌ Failed to clone SUSFS repository after $MAX_RETRIES attempts"
-          echo "Branch: $SUSFS_BRANCH"
-          echo "Branch: $SUSFS_BRANCH"
-          echo "Available branches:"
-          echo "Available branches:"
-          git ls-remote --heads https://gitlab.com/simonpunk/susfs4ksu.git | sed 's/.*refs\/heads\///'
-          git ls-remote --heads https://gitlab.com/simonpunk/susfs4ksu.git | sed 's/.*refs\/heads\///'
+          echo "⏳ Checking for SUSFS branch $SUSFS_BRANCH ..."
+          echo "⏳ Checking for SUSFS branch $SUSFS_BRANCH ..."
+          AVAILABLE_BRANCHES=$(git ls-remote --heads "$SUSFS_URL" | sed 's/.*refs\/heads\///' || true)
+          AVAILABLE_BRANCHES=$(git ls-remote --heads "$SUSFS_URL" | sed 's/.*refs\/heads\///' || true)
+          echo "Available branches for SUSFS:"
+          echo "Available branches for SUSFS:"
+          echo "$AVAILABLE_BRANCHES"
+          echo "$AVAILABLE_BRANCHES"
+          if ! echo "$AVAILABLE_BRANCHES" | grep -wq "$SUSFS_BRANCH"; then
+          if ! echo "$AVAILABLE_BRANCHES" | grep -wq "$SUSFS_BRANCH"; then
+          echo "❌ Branch $SUSFS_BRANCH not found in SUSFS repo!"
+          echo "❌ Branch $SUSFS_BRANCH not found in SUSFS repo!"
           exit 1
           exit 1
           fi
           fi
-          echo "⚠️ Clone failed, retrying in 5 seconds..."
-          echo "⚠️ Clone failed, retrying in 5 seconds..."
+
+
+          # Robust clone with cleanup/retries
+          # Robust clone with cleanup/retries
+          MAX_RETRIES=3
+          MAX_RETRIES=3
+          n=0
+          n=0
+          while [ $n -lt $MAX_RETRIES ]; do
+          while [ $n -lt $MAX_RETRIES ]; do
+          echo "Attempt $((n+1)): git clone --depth=1 -b \"$SUSFS_BRANCH\" \"$SUSFS_URL\" susfs4ksu"
+          echo "Attempt $((n+1)): git clone --depth=1 -b \"$SUSFS_BRANCH\" \"$SUSFS_URL\" susfs4ksu"
+          if git clone --depth=1 -b "$SUSFS_BRANCH" "$SUSFS_URL" susfs4ksu; then
+          if git clone --depth=1 -b "$SUSFS_BRANCH" "$SUSFS_URL" susfs4ksu; then
+          echo "✅ SUSFS repository cloned successfully"
+          echo "✅ SUSFS repository cloned successfully"
+          break
+          break
+          else
+          else
+          echo "⚠️ SUSFS clone failed, cleaning folder and retrying in 5s..."
+          echo "⚠️ SUSFS clone failed, cleaning folder and retrying in 5s..."
           rm -rf susfs4ksu
           rm -rf susfs4ksu
           sleep 5
           sleep 5
           fi
           fi
+          n=$((n+1))
+          n=$((n+1))
           done
           done
 
 
-          # Verify SUSFS repository contents
-          # Verify SUSFS repository contents
-          echo "🔍 Verifying SUSFS repository..."
-          echo "🔍 Verifying SUSFS repository..."
-          if [ ! -d "susfs4ksu" ]; then
-          if [ ! -d "susfs4ksu" ]; then
-          echo "❌ susfs4ksu directory missing at $(pwd)"
-          echo "❌ susfs4ksu directory missing at $(pwd)"
+          if [ ! -d susfs4ksu ]; then
+          if [ ! -d susfs4ksu ]; then
+          echo "❌ susfs4ksu directory missing after clone!"
+          echo "❌ susfs4ksu directory missing after clone!"
           ls -la
           ls -la
           exit 1
           exit 1
           fi
           fi
+
+
           cd susfs4ksu
           cd susfs4ksu
-          echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
-          echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
-          echo "Checking for required files..."
-          echo "Checking for required files..."
-
-
-          REQUIRED_FILES=(
-          REQUIRED_FILES=(
-          "kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
-          "kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
-          "kernel_patches/fs"
-          "kernel_patches/fs"
-          "kernel_patches/include/linux"
-          "kernel_patches/include/linux"
-          )
-          )
-
-
-          for file in "${REQUIRED_FILES[@]}"; do
-          for file in "${REQUIRED_FILES[@]}"; do
-          if [ ! -e "$file" ]; then
-          if [ ! -e "$file" ]; then
-          echo "❌ Required file/directory not found: $file"
-          echo "❌ Required file/directory not found: $file"
-          echo "Repository contents:"
-          echo "Repository contents:"
-          ls -R
-          ls -R
-          exit 1
-          exit 1
-          fi
-          fi
-          done
-          done
-
-
-          echo "✅ SUSFS repository verified at $(pwd)"
-          echo "✅ SUSFS repository verified at $(pwd)"
+          echo "Current SUSFS branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo "Current SUSFS branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo "SUSFS relevant files listing:"
+          echo "SUSFS relevant files listing:"
+          ls -la kernel_patches || true
+          ls -la kernel_patches || true
+          ls -la kernel_patches/fs || true
+          ls -la kernel_patches/fs || true
+          ls -la kernel_patches/include/linux || true
+          ls -la kernel_patches/include/linux || true
           cd ..
           cd ..
 
 
-          # Clone SukiSU patch repository with fallback methods into kernel_workspace
-          # Clone SukiSU patch repository with fallback methods into kernel_workspace
-          if ! git clone https://github.com/ShirkNeko/SukiSU_patch.git; then
-          if ! git clone https://github.com/ShirkNeko/SukiSU_patch.git; then
-          echo "⚠️ Trying alternate clone method..."
-          echo "⚠️ Trying alternate clone method..."
-          if ! git clone "https://github.com/ShirkNeko/SukiSU_patch.git" --depth=1; then
-          if ! git clone "https://github.com/ShirkNeko/SukiSU_patch.git" --depth=1; then
-          echo "❌ Failed to clone SukiSU patch repository"
-          echo "❌ Failed to clone SukiSU patch repository"
-          exit 1
-          exit 1
+          # SukiSU_patch repo settings
+          # SukiSU_patch repo settings
+          PATCH_URL="https://github.com/ShirkNeko/SukiSU_patch.git"
+          PATCH_URL="https://github.com/ShirkNeko/SukiSU_patch.git"
+          MAX_RETRIES=2
+          MAX_RETRIES=2
+          n=0
+          n=0
+          until [ $n -ge $MAX_RETRIES ]; do
+          until [ $n -ge $MAX_RETRIES ]; do
+          echo "Attempt $((n+1)): cloning SukiSU_patch repo..."
+          echo "Attempt $((n+1)): cloning SukiSU_patch repo..."
+          if git clone --depth=1 "$PATCH_URL" SukiSU_patch; then
+          if git clone --depth=1 "$PATCH_URL" SukiSU_patch; then
+          echo "✅ SukiSU_patch repo cloned."
+          echo "✅ SukiSU_patch repo cloned."
+          break
+          break
+          else
+          else
+          echo "⚠️ SukiSU_patch clone failed, retrying in 5s..."
+          echo "⚠️ SukiSU_patch clone failed, retrying in 5s..."
+          rm -rf SukiSU_patch
+          rm -rf SukiSU_patch
+          sleep 5
+          sleep 5
           fi
           fi
-          fi
-          fi
+          n=$((n+1))
+          n=$((n+1))
+          done
+          done
 
 
-          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
-          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
-          echo "❌ Failed to clone required repositories into $(pwd)"
-          echo "❌ Failed to clone required repositories into $(pwd)"
+          if [ ! -d SukiSU_patch ]; then
+          if [ ! -d SukiSU_patch ]; then
+          echo "❌ SukiSU_patch directory missing after clone!"
+          echo "❌ SukiSU_patch directory missing after clone!"
           ls -la
           ls -la
           exit 1
@@ -440,58 +434,50 @@ jobs:
           fi
 
 
-          echo "✅ Successfully cloned required repositories into $(pwd)"
-          echo "✅ Successfully cloned required repositories into $(pwd)"
-
-
-          # Verify repository contents
-          # Verify repository contents
-          echo "🔍 Verifying repository contents from kernel_workspace..."
-          echo "🔍 Verifying repository contents from kernel_workspace..."
-          if [ ! -f "susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" ]; then
-          if [ ! -f "susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" ]; then
-          echo "❌ SUSFS patch file not found in kernel_workspace/susfs4ksu/kernel_patches/"
-          echo "❌ SUSFS patch file not found in kernel_workspace/susfs4ksu/kernel_patches/"
-          ls -la susfs4ksu/kernel_patches || true
-          ls -la susfs4ksu/kernel_patches || true
+          # Final verification for required files
+          # Final verification for required files
+          PATCH1="susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          PATCH1="susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          PATCH2="SukiSU_patch/69_hide_stuff.patch"
+          PATCH2="SukiSU_patch/69_hide_stuff.patch"
+          if [ ! -f "$PATCH1" ]; then
+          if [ ! -f "$PATCH1" ]; then
+          echo "❌ Required SUSFS patch missing: $PATCH1"
+          echo "❌ Required SUSFS patch missing: $PATCH1"
+          ls -la susfs4ksu/kernel_patches/
+          ls -la susfs4ksu/kernel_patches/
           exit 1
           exit 1
           fi
           fi
-
-
-          if [ ! -f "SukiSU_patch/69_hide_stuff.patch" ]; then
-          if [ ! -f "SukiSU_patch/69_hide_stuff.patch" ]; then
-          echo "❌ Hide Stuff patch file not found in kernel_workspace/SukiSU_patch"
-          echo "❌ Hide Stuff patch file not found in kernel_workspace/SukiSU_patch"
-          ls -la SukiSU_patch || true
-          ls -la SukiSU_patch || true
+          if [ ! -f "$PATCH2" ]; then
+          if [ ! -f "$PATCH2" ]; then
+          echo "❌ Required SukiSU 'Hide Stuff' patch missing: $PATCH2"
+          echo "❌ Required SukiSU 'Hide Stuff' patch missing: $PATCH2"
+          ls -la SukiSU_patch/
+          ls -la SukiSU_patch/
           exit 1
           exit 1
           fi
           fi
+          echo "✅ Both main patch files are present."
+          echo "✅ Both main patch files are present."
 
 
-          echo "✅ Repository contents verified in kernel_workspace"
-          echo "✅ Repository contents verified in kernel_workspace"
-
-
-          # Apply SUSFS Patches
-          # Apply SUSFS Patches
       - name: Apply SUSFS Patches to ChromeOS Kernel
       - name: Apply SUSFS Patches to ChromeOS Kernel
         run: |
         run: |
+          set -euo pipefail
+          set -euo pipefail
+
+
           cd kernel_workspace/kernel_platform
           cd kernel_workspace/kernel_platform
           echo "🔨 Preparing SUSFS patches..."
           echo "🔨 Preparing SUSFS patches..."
           
           
-          # Create backup of original files
-          # Create backup of original files
-          echo "📦 Creating backup of original files..."
-          echo "📦 Creating backup of original files..."
           BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
           BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
           mkdir -p "$BACKUP_DIR"
@@ -500,30 +486,16 @@ jobs:
           mkdir -p "./common/fs"
           mkdir -p "./common/include/linux"
           mkdir -p "./common/include/linux"
-          
-          
-          if [ -d "./common/fs" ]; then
-          if [ -d "./common/fs" ]; then
-          cp -r "./common/fs" "$BACKUP_DIR/"
-          cp -r "./common/fs" "$BACKUP_DIR/"
-          fi
-          fi
-          if [ -d "./common/include/linux" ]; then
-          if [ -d "./common/include/linux" ]; then
-          cp -r "./common/include/linux" "$BACKUP_DIR/"
-          cp -r "./common/include/linux" "$BACKUP_DIR/"
-          fi
-          fi
-          
-          
-          echo "📝 Copying SUSFS files..."
-          echo "📝 Copying SUSFS files..."
+
+
+          if [ -d "./common/fs" ]; then cp -r "./common/fs" "$BACKUP_DIR/"; fi
+          if [ -d "./common/fs" ]; then cp -r "./common/fs" "$BACKUP_DIR/"; fi
+          if [ -d "./common/include/linux" ]; then cp -r "./common/include/linux" "$BACKUP_DIR/"; fi
+          if [ -d "./common/include/linux" ]; then cp -r "./common/include/linux" "$BACKUP_DIR/"; fi
+
+
           PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
           PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
-          
-          
-          # Verify patch file exists
-          # Verify patch file exists
           if [ ! -f "$PATCH_FILE" ]; then
           if [ ! -f "$PATCH_FILE" ]; then
           echo "❌ SUSFS patch file not found: $PATCH_FILE"
@@ -612,30 +584,112 @@ jobs:
       - name: Apply Hide Stuff Patches
         run: |
         run: |
-          cd kernel_workspace/kernel_platform/common
-          cd kernel_workspace/kernel_platform/common
-          cp ../../SukiSU_patch/69_hide_stuff.patch ./
-          cp ../../SukiSU_patch/69_hide_stuff.patch ./
-          echo "🔨 Applying Hide Stuff patches..."
-          echo "🔨 Applying Hide Stuff patches..."
-          patch -p1 -F 3 < 69_hide_stuff.patch
-          patch -p1 -F 3 < 69_hide_stuff.patch
-          echo "✅ Hide Stuff patches applied"
-          echo "✅ Hide Stuff patches applied"
-          
-          
-          # Verify patch application
-          # Verify patch application
-          echo "🔍 Verifying patches..."
-          echo "🔍 Verifying patches..."
-          if ! git diff --check; then
-          if ! git diff --check; then
-          echo "⚠️ Warning: Patch verification found whitespace errors"
-          echo "⚠️ Warning: Patch verification found whitespace errors"
+          set -euo pipefail
+          set -euo pipefail
+
+
+          cd kernel_workspace/kernel_platform
+          cd kernel_workspace/kernel_platform
+          echo "🔨 Applying Hide Stuff patches (SukiSU_patch/69_hide_stuff.patch)..."
+          echo "🔨 Applying Hide Stuff patches (SukiSU_patch/69_hide_stuff.patch)..."
+
+
+          PATCH_SRC="../SukiSU_patch/69_hide_stuff.patch"
+          PATCH_SRC="../SukiSU_patch/69_hide_stuff.patch"
+          if [ ! -f "$PATCH_SRC" ]; then
+          if [ ! -f "$PATCH_SRC" ]; then
+          echo "❌ Hide Stuff patch not found: $PATCH_SRC"
+          echo "❌ Hide Stuff patch not found: $PATCH_SRC"
+          ls -la ../SukiSU_patch || true
+          ls -la ../SukiSU_patch || true
+          exit 1
+          exit 1
           fi
           fi
-          echo "✅ Hide Stuff patches applied"
-          echo "✅ Hide Stuff patches applied"
+
+
+          # Work in ./common where SUSFS files were placed
+          # Work in ./common where SUSFS files were placed
+          cd ./common
+          cd ./common
+
+
+          echo "Saving pre-patch state..."
+          echo "Saving pre-patch state..."
+          git -c user.name="GitHub Actions" -c user.email="actions@github.com" add -A || true
+          git -c user.name="GitHub Actions" -c user.email="actions@github.com" add -A || true
+          git -c user.name="GitHub Actions" -c user.email="actions@github.com" commit -m "Save state before Hide Stuff patch" || true
+          git -c user.name="GitHub Actions" -c user.email="actions@github.com" commit -m "Save state before Hide Stuff patch" || true
+
+
+          echo "Patch head:"
+          echo "Patch head:"
+          sed -n '1,80p' "$PATCH_SRC" || true
+          sed -n '1,80p' "$PATCH_SRC" || true
+
+
+          # Prefer git apply --3way
+          # Prefer git apply --3way
+          if git apply --3way --index --check "$PATCH_SRC" 2>&1 | tee hide_git_check.log; then
+          if git apply --3way --index --check "$PATCH_SRC" 2>&1 | tee hide_git_check.log; then
+          echo "✅ git apply --check succeeded; applying --3way..."
+          echo "✅ git apply --check succeeded; applying --3way..."
+          git apply --3way --index "$PATCH_SRC"
+          git apply --3way --index "$PATCH_SRC"
+          else
+          else
+          echo "⚠️ git apply failed; trying patch -p levels..."
+          echo "⚠️ git apply failed; trying patch -p levels..."
+          APPLIED=0
+          APPLIED=0
+          for P in 0 1 2 3; do
+          for P in 0 1 2 3; do
+          echo "Trying patch -p$P ..."
+          echo "Trying patch -p$P ..."
+          if patch --dry-run -p$P < "$PATCH_SRC" > hide_patch_test_p${P}.log 2>&1; then
+          if patch --dry-run -p$P < "$PATCH_SRC" > hide_patch_test_p${P}.log 2>&1; then
+          echo "✅ patch -p$P dry-run OK; applying..."
+          echo "✅ patch -p$P dry-run OK; applying..."
+          patch -p$P < "$PATCH_SRC"
+          patch -p$P < "$PATCH_SRC"
+          APPLIED=1
+          APPLIED=1
+          break
+          break
+          else
+          else
+          echo "→ patch -p$P failed; see hide_patch_test_p${P}.log"
+          echo "→ patch -p$P failed; see hide_patch_test_p${P}.log"
+          fi
+          fi
+          done
+          done
+          if [ $APPLIED -eq 0 ]; then
+          if [ $APPLIED -eq 0 ]; then
+          echo "❌ Failed to apply Hide Stuff patch. Diagnostics:"
+          echo "❌ Failed to apply Hide Stuff patch. Diagnostics:"
+          sed -n '1,200p' hide_git_check.log || true
+          sed -n '1,200p' hide_git_check.log || true
+          for f in hide_patch_test_*.log; do sed -n '1,200p' "$f" || true; done
+          for f in hide_patch_test_*.log; do sed -n '1,200p' "$f" || true; done
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+
+
+          echo "Verifying patch application (git diff --check)..."
+          echo "Verifying patch application (git diff --check)..."
+          if ! git diff --check; then
+          if ! git diff --check; then
+          echo "⚠️ Warning: whitespace or other issues found in diff --check"
+          echo "⚠️ Warning: whitespace or other issues found in diff --check"
+          fi
+          fi
+          echo "✅ Hide Stuff patch applied"
+          echo "✅ Hide Stuff patch applied"
 
 
           # Apply VFS Hooks if enabled
@@ -645,68 +699,102 @@ jobs:
         if: ${{ github.event.inputs.VFS_HOOKS == 'true' }}
         run: |
         run: |
-          cd kernel_workspace/kernel_platform/common
-          cd kernel_workspace/kernel_platform/common
+          set -euo pipefail
+          set -euo pipefail
+
+
+          cd kernel_workspace/kernel_platform
+          cd kernel_workspace/kernel_platform
           echo "🔧 Preparing VFS hooks..."
           echo "🔧 Preparing VFS hooks..."
-          
-          
-          # Verify hook patch exists
-          # Verify hook patch exists
-          if [ ! -f "../SukiSU_patch/hooks/syscall_hooks.patch" ]; then
-          if [ ! -f "../SukiSU_patch/hooks/syscall_hooks.patch" ]; then
-          echo "❌ VFS hooks patch not found!"
-          echo "❌ VFS hooks patch not found!"
+
+
+          HOOK_PATCH="../SukiSU_patch/hooks/syscall_hooks.patch"
+          HOOK_PATCH="../SukiSU_patch/hooks/syscall_hooks.patch"
+          if [ ! -f "$HOOK_PATCH" ]; then
+          if [ ! -f "$HOOK_PATCH" ]; then
+          echo "❌ VFS hooks patch not found: $HOOK_PATCH"
+          echo "❌ VFS hooks patch not found: $HOOK_PATCH"
+          ls -la ../SukiSU_patch/hooks || true
+          ls -la ../SukiSU_patch/hooks || true
           exit 1
           exit 1
           fi
           fi
-          
-          
-          # Create backup
-          # Create backup
-          git add . && git commit -m "Save state before VFS hooks"
-          git add . && git commit -m "Save state before VFS hooks"
-          
-          
-          # Copy and verify patch
-          # Copy and verify patch
-          cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
-          cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
-          
-          
-          echo "🔨 Applying VFS hooks..."
-          echo "🔨 Applying VFS hooks..."
-          if ! patch -p1 --dry-run -F 3 < syscall_hooks.patch > vfs_hooks_test.log 2>&1; then
-          if ! patch -p1 --dry-run -F 3 < syscall_hooks.patch > vfs_hooks_test.log 2>&1; then
-          echo "⚠️ VFS hooks patch dry-run showed conflicts:"
-          echo "⚠️ VFS hooks patch dry-run showed conflicts:"
-          cat vfs_hooks_test.log
-          cat vfs_hooks_test.log
-          echo "Attempting to apply patch with force..."
-          echo "Attempting to apply patch with force..."
-          if ! patch -p1 -F 3 --force < syscall_hooks.patch > vfs_hooks_apply.log 2>&1; then
-          if ! patch -p1 -F 3 --force < syscall_hooks.patch > vfs_hooks_apply.log 2>&1; then
-          echo "❌ Failed to apply VFS hooks patch:"
-          echo "❌ Failed to apply VFS hooks patch:"
-          cat vfs_hooks_apply.log
-          cat vfs_hooks_apply.log
-          git reset --hard HEAD
-          git reset --hard HEAD
-          exit 1
-          exit 1
-          fi
-          fi
+
+
+          # Save state
+          # Save state
+          cd common
+          cd common
+          git -c user.name="GitHub Actions" -c user.email="actions@github.com" add -A || true
+          git -c user.name="GitHub Actions" -c user.email="actions@github.com" add -A || true
+          git -c user.name="GitHub Actions" -c user.email="actions@github.com" commit -m "Save state before VFS hooks" || true
+          git -c user.name="GitHub Actions" -c user.email="actions@github.com" commit -m "Save state before VFS hooks" || true
+
+
+          echo "Preview hooks patch:"
+          echo "Preview hooks patch:"
+          sed -n '1,80p' "$HOOK_PATCH" || true
+          sed -n '1,80p' "$HOOK_PATCH" || true
+
+
+          # Try git apply --3way first
+          # Try git apply --3way first
+          if git apply --3way --index --check "$HOOK_PATCH" 2>&1 | tee vfs_git_check.log; then
+          if git apply --3way --index --check "$HOOK_PATCH" 2>&1 | tee vfs_git_check.log; then
+          echo "✅ git apply check succeeded; applying --3way..."
+          echo "✅ git apply check succeeded; applying --3way..."
+          git apply --3way --index "$HOOK_PATCH"
+          git apply --3way --index "$HOOK_PATCH"
           else
           else
-          patch -p1 -F 3 < syscall_hooks.patch
-          patch -p1 -F 3 < syscall_hooks.patch
+          echo "⚠️ git apply failed; attempting patch -p auto-detect..."
+          echo "⚠️ git apply failed; attempting patch -p auto-detect..."
+          APPLIED=0
+          APPLIED=0
+          for P in 0 1 2 3; do
+          for P in 0 1 2 3; do
+          echo "Trying patch -p$P ..."
+          echo "Trying patch -p$P ..."
+          if patch --dry-run -p$P < "$HOOK_PATCH" > vfs_patch_test_p${P}.log 2>&1; then
+          if patch --dry-run -p$P < "$HOOK_PATCH" > vfs_patch_test_p${P}.log 2>&1; then
+          echo "✅ patch -p$P dry-run OK; applying..."
+          echo "✅ patch -p$P dry-run OK; applying..."
+          patch -p$P < "$HOOK_PATCH"
+          patch -p$P < "$HOOK_PATCH"
+          APPLIED=1
+          APPLIED=1
+          break
+          break
+          else
+          else
+          echo "→ patch -p$P failed (see vfs_patch_test_p${P}.log)"
+          echo "→ patch -p$P failed (see vfs_patch_test_p${P}.log)"
           fi
           fi
-          
-          
-          # Verify patch application
-          # Verify patch application
+          done
+          done
+          if [ $APPLIED -eq 0 ]; then
+          if [ $APPLIED -eq 0 ]; then
+          echo "❌ Failed to apply VFS hooks patch. Diagnostics:"
+          echo "❌ Failed to apply VFS hooks patch. Diagnostics:"
+          sed -n '1,200p' vfs_git_check.log || true
+          sed -n '1,200p' vfs_git_check.log || true
+          for f in vfs_patch_test_*.log; do sed -n '1,200p' "$f" || true; done
+          for f in vfs_patch_test_*.log; do sed -n '1,200p' "$f" || true; done
+          git reset --hard HEAD || true
+          git reset --hard HEAD || true
+          exit 1
+          exit 1
+          fi
+          fi
+          fi
+          fi
+
+
+          echo "Verifying VFS hooks (git diff --check)..."
+          echo "Verifying VFS hooks (git diff --check)..."
           if ! git diff --check; then
           if ! git diff --check; then
           echo "⚠️ Warning: VFS hooks patch verification found whitespace errors"
@@ -724,66 +812,72 @@ jobs:
         if: ${{ github.event.inputs.ZRAM == 'true' }}
         run: |
         run: |
-          cd kernel
-          cd kernel
+          set -euo pipefail
+          set -euo pipefail
+
+
+          cd kernel_workspace/kernel_platform
+          cd kernel_workspace/kernel_platform
           echo "🔧 Preparing ZRAM enhancements..."
           echo "🔧 Preparing ZRAM enhancements..."
-          
-          
-          # Verify ZRAM files exist
-          # Verify ZRAM files exist
-          for dir in "include/linux" "lib" "crypto"; do
-          for dir in "include/linux" "lib" "crypto"; do
-          if [ ! -d "../SukiSU_patch/other/zram/lz4k/$dir" ]; then
-          if [ ! -d "../SukiSU_patch/other/zram/lz4k/$dir" ]; then
-          echo "❌ ZRAM directory not found: $dir"
-          echo "❌ ZRAM directory not found: $dir"
+
+
+          # Validate ZRAM directories in patch repo
+          # Validate ZRAM directories in patch repo
+          ZRAM_BASE="../SukiSU_patch/other/zram/lz4k"
+          ZRAM_BASE="../SukiSU_patch/other/zram/lz4k"
+          REQUIRED_DIRS=( "include/linux" "lib" "crypto" )
+          REQUIRED_DIRS=( "include/linux" "lib" "crypto" )
+          for dir in "${REQUIRED_DIRS[@]}"; do
+          for dir in "${REQUIRED_DIRS[@]}"; do
+          if [ ! -d "${ZRAM_BASE}/${dir}" ]; then
+          if [ ! -d "${ZRAM_BASE}/${dir}" ]; then
+          echo "❌ ZRAM source directory missing: ${ZRAM_BASE}/${dir}"
+          echo "❌ ZRAM source directory missing: ${ZRAM_BASE}/${dir}"
+          ls -la "${ZRAM_BASE}" || true
+          ls -la "${ZRAM_BASE}" || true
           exit 1
           exit 1
           fi
           fi
           done
           done
-          
-          
-          # Create backup of target directories
-          # Create backup of target directories
-          for dir in "include/linux" "lib" "crypto"; do
-          for dir in "include/linux" "lib" "crypto"; do
+
+
+          # Create backups of target directories (if they exist)
+          # Create backups of target directories (if they exist)
+          for dir in "${REQUIRED_DIRS[@]}"; do
+          for dir in "${REQUIRED_DIRS[@]}"; do
           if [ -d "$dir" ]; then
           if [ -d "$dir" ]; then
-          tar czf "../${dir//\//_}_backup.tar.gz" "$dir/"
-          tar czf "../${dir//\//_}_backup.tar.gz" "$dir/"
+          tar czf "../${dir//\//_}_backup_$(date +%Y%m%d_%H%M%S).tar.gz" "$dir/"
+          tar czf "../${dir//\//_}_backup_$(date +%Y%m%d_%H%M%S).tar.gz" "$dir/"
           fi
           fi
           done
           done
-          
-          
+
+
           echo "📦 Copying ZRAM files..."
           echo "📦 Copying ZRAM files..."
-          # Copy ZRAM related files with error checking
-          # Copy ZRAM related files with error checking
-          for src in "../SukiSU_patch/other/zram/lz4k/include/linux" "../SukiSU_patch/other/zram/lz4k/lib" "../SukiSU_patch/other/zram/lz4k/crypto"; do
-          for src in "../SukiSU_patch/other/zram/lz4k/include/linux" "../SukiSU_patch/other/zram/lz4k/lib" "../SukiSU_patch/other/zram/lz4k/crypto"; do
-          dest="${src#../SukiSU_patch/other/zram/lz4k/}"
-          dest="${src#../SukiSU_patch/other/zram/lz4k/}"
-          if ! cp -r "$src"/* "./$dest/"; then
-          if ! cp -r "$src"/* "./$dest/"; then
-          echo "❌ Failed to copy ZRAM files from $src"
-          echo "❌ Failed to copy ZRAM files from $src"
-          # Restore backups
-          # Restore backups
-          for backup in ../*_backup.tar.gz; do
-          for backup in ../*_backup.tar.gz; do
-          dir="${backup##*/}_backup.tar.gz"
-          dir="${backup##*/}_backup.tar.gz"
-          dir="${dir%_backup.tar.gz}"
-          dir="${dir%_backup.tar.gz}"
-          dir="${dir//_//}"
-          dir="${dir//_//}"
-          tar xzf "$backup"
-          tar xzf "$backup"
+          for src in "${REQUIRED_DIRS[@]}"; do
+          for src in "${REQUIRED_DIRS[@]}"; do
+          SRC_PATH="${ZRAM_BASE}/${src}"
+          SRC_PATH="${ZRAM_BASE}/${src}"
+          DEST_PATH="./${src%/*}" # e.g. include/linux -> ./include
+          DEST_PATH="./${src%/*}" # e.g. include/linux -> ./include
+          mkdir -p "$DEST_PATH"
+          mkdir -p "$DEST_PATH"
+          if ! cp -r "$SRC_PATH"/* "$DEST_PATH/"; then
+          if ! cp -r "$SRC_PATH"/* "$DEST_PATH/"; then
+          echo "❌ Failed to copy ZRAM files from $SRC_PATH"
+          echo "❌ Failed to copy ZRAM files from $SRC_PATH"
+          echo "Restoring backups..."
+          echo "Restoring backups..."
+          for backup in ../*_backup_*.tar.gz; do
+          for backup in ../*_backup_*.tar.gz; do
+          if [ -f "$backup" ]; then tar xzf "$backup"; fi
+          if [ -f "$backup" ]; then tar xzf "$backup"; fi
           done
           done
           exit 1
@@ -792,80 +886,90 @@ jobs:
           fi
           done
           done
-          
-          
-          # Copy LZ4K Oplus with verification
-          # Copy LZ4K Oplus with verification
+
+
+          # Copy optional lz4k_oplus dir if present
+          # Copy optional lz4k_oplus dir if present
           if [ -d "../SukiSU_patch/other/zram/lz4k_oplus" ]; then
           if [ -d "../SukiSU_patch/other/zram/lz4k_oplus" ]; then
-          cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./lib/
-          cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./lib/
+          echo "Copying lz4k_oplus..."
+          echo "Copying lz4k_oplus..."
+          mkdir -p lib
+          mkdir -p lib
+          cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./lib/ || true
+          cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./lib/ || true
           else
           else
-          echo "⚠️ LZ4K Oplus directory not found, skipping..."
-          echo "⚠️ LZ4K Oplus directory not found, skipping..."
+          echo "⚠️ lz4k_oplus not present, skipping..."
+          echo "⚠️ lz4k_oplus not present, skipping..."
           fi
           fi
-          
-          
-          # Apply LZ4KD patch if available
-          # Apply LZ4KD patch if available
+
+
+          # Apply LZ4KD patch if present
+          # Apply LZ4KD patch if present
           ZRAM_PATCH="../SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch"
           ZRAM_PATCH="../SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch"
           if [ -f "$ZRAM_PATCH" ]; then
           if [ -f "$ZRAM_PATCH" ]; then
-          echo "🔨 Applying LZ4KD patch..."
-          echo "🔨 Applying LZ4KD patch..."
+          echo "Applying LZ4KD patch: $ZRAM_PATCH"
+          echo "Applying LZ4KD patch: $ZRAM_PATCH"
           cp "$ZRAM_PATCH" ./
           cp "$ZRAM_PATCH" ./
-            
-            
-          if ! patch -p1 --dry-run -F 3 < lz4kd.patch > zram_test.log 2>&1; then
-          if ! patch -p1 --dry-run -F 3 < lz4kd.patch > zram_test.log 2>&1; then
-          echo "⚠️ LZ4KD patch dry-run showed conflicts:"
-          echo "⚠️ LZ4KD patch dry-run showed conflicts:"
-          cat zram_test.log
-          cat zram_test.log
-          echo "Attempting to apply patch with force..."
-          echo "Attempting to apply patch with force..."
-          if ! patch -p1 -F 3 --force < lz4kd.patch > zram_apply.log 2>&1; then
-          if ! patch -p1 -F 3 --force < lz4kd.patch > zram_apply.log 2>&1; then
-          echo "❌ Failed to apply LZ4KD patch:"
-          echo "❌ Failed to apply LZ4KD patch:"
-          cat zram_apply.log
-          cat zram_apply.log
-          # Restore from backups
-          # Restore from backups
-          for backup in ../*_backup.tar.gz; do
-          for backup in ../*_backup.tar.gz; do
-          dir="${backup##*/}_backup.tar.gz"
-          dir="${backup##*/}_backup.tar.gz"
-          dir="${dir%_backup.tar.gz}"
-          dir="${dir%_backup.tar.gz}"
-          dir="${dir//_//}"
-          dir="${dir//_//}"
-          tar xzf "$backup"
-          tar xzf "$backup"
+          if git apply --index --check lz4kd.patch 2>&1 | tee zram_git_check.log; then
+          if git apply --index --check lz4kd.patch 2>&1 | tee zram_git_check.log; then
+          git apply --index lz4kd.patch
+          git apply --index lz4kd.patch
+          else
+          else
+          echo "git apply check failed; trying patch -p auto-detect..."
+          echo "git apply check failed; trying patch -p auto-detect..."
+          APPLIED=0
+          APPLIED=0
+          for P in 0 1 2 3; do
+          for P in 0 1 2 3; do
+          if patch --dry-run -p$P < lz4kd.patch > zram_patch_test_p${P}.log 2>&1; then
+          if patch --dry-run -p$P < lz4kd.patch > zram_patch_test_p${P}.log 2>&1; then
+          patch -p$P < lz4kd.patch
+          patch -p$P < lz4kd.patch
+          APPLIED=1
+          APPLIED=1
+          break
+          break
+          fi
+          fi
+          done
+          done
+          if [ $APPLIED -eq 0 ]; then
+          if [ $APPLIED -eq 0 ]; then
+          echo "❌ Failed to apply LZ4KD patch. Diagnostics:"
+          echo "❌ Failed to apply LZ4KD patch. Diagnostics:"
+          sed -n '1,200p' zram_git_check.log || true
+          sed -n '1,200p' zram_git_check.log || true
+          for f in zram_patch_test_*.log; do sed -n '1,200p' "$f" || true; done
+          for f in zram_patch_test_*.log; do sed -n '1,200p' "$f" || true; done
+          # restore backups
+          # restore backups
+          for backup in ../*_backup_*.tar.gz; do
+          for backup in ../*_backup_*.tar.gz; do
+          if [ -f "$backup" ]; then tar xzf "$backup"; fi
+          if [ -f "$backup" ]; then tar xzf "$backup"; fi
           done
           done
           exit 1
           exit 1
           fi
           fi
-          else
-          else
-          patch -p1 -F 3 < lz4kd.patch
-          patch -p1 -F 3 < lz4kd.patch
           fi
           fi
           else
           else
-          echo "⚠️ LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}"
-          echo "⚠️ LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}"
+          echo "⚠️ LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}; skipping"
+          echo "⚠️ LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}; skipping"
           fi
           fi
-          
-          
+
+
           echo "✅ ZRAM enhancements applied successfully"
           echo "✅ ZRAM enhancements applied successfully"
           
