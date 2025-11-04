@@ -89,8 +89,58 @@ jobs:
           
       - name: Clone kernel source
         run: |
-          git clone --depth=1 -b ${{ github.event.inputs.KERNEL_BRANCH }} https://chromium.googlesource.com/chromiumos/third_party/kernel
-          cd kernel
+          echo "🔄 Preparing build environment..."
+          
+          # Create a clean build directory
+          BUILD_DIR="build_$(date +%Y%m%d_%H%M%S)"
+          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_ENV
+          
+          mkdir -p "$BUILD_DIR"
+          cd "$BUILD_DIR"
+          
+          echo "📂 Working in build directory: $BUILD_DIR"
+          
+          # Clone with retry mechanism
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "📥 Cloning kernel source (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
+            if git clone --depth=1 -b ${{ github.event.inputs.KERNEL_BRANCH }} \
+               https://chromium.googlesource.com/chromiumos/third_party/kernel source; then
+              echo "✅ Kernel source cloned successfully"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+                echo "❌ Failed to clone kernel after $MAX_RETRIES attempts"
+                exit 1
+              fi
+              echo "⚠️ Clone failed, retrying in 5 seconds..."
+              sleep 5
+            fi
+          done
+          
+          # Verify clone success and enter directory
+          if [ ! -d "source" ]; then
+            echo "❌ Kernel source directory not found after clone"
+            exit 1
+          fi
+          
+          cd source
+          
+          # Verify branch checkout
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          if [ "$CURRENT_BRANCH" != "${{ github.event.inputs.KERNEL_BRANCH }}" ]; then
+            echo "❌ Wrong branch checked out: $CURRENT_BRANCH (expected: ${{ github.event.inputs.KERNEL_BRANCH }})"
+            exit 1
+          fi
+          
+          # Log repository info
+          echo "📋 Kernel repository information:"
+          echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo "Commit: $(git rev-parse HEAD)"
+          echo "Date: $(git log -1 --format=%cd)
           
       - name: Clone SUSFS and Patch Repositories
         run: |
@@ -132,7 +182,7 @@ jobs:
       # Apply SUSFS Patches
       - name: Apply SUSFS Patches to ChromeOS Kernel
         run: |
-          cd kernel
+          cd $BUILD_DIR/source
           echo "🔨 Preparing SUSFS patches..."
           
           # Create backup of original files
@@ -173,7 +223,7 @@ jobs:
       # Apply Hide Stuff Patches
       - name: Apply Hide Stuff Patches
         run: |
-          cd kernel
+          cd $BUILD_DIR/source
           echo "🔨 Applying Hide Stuff patches..."
           
           # Create backup
@@ -207,7 +257,7 @@ jobs:
       - name: Apply VFS Hooks
         if: ${{ github.event.inputs.VFS_HOOKS == 'true' }}
         run: |
-          cd kernel
+          cd $BUILD_DIR/source
           echo "🔧 Preparing VFS hooks..."
           
           # Verify hook patch exists
@@ -322,7 +372,7 @@ jobs:
           
       - name: Configure kernel
         run: |
-          cd kernel
+          cd $BUILD_DIR/source
           echo "🔧 Configuring kernel build environment..."
           
           # Create arch/x86/configs directory if it doesn't exist
