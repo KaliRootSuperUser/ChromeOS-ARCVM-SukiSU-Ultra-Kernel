@@ -238,54 +238,84 @@ jobs:
           cd kernel_workspace/kernel_platform
           echo "🔨 Preparing SUSFS patches..."
           
+          # Create backup directory
           BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
           mkdir -p "$BACKUP_DIR"
-          mkdir -p "./common/fs"
-          mkdir -p "./common/include/linux"
 
-          if [ -d "./common/fs" ]; then cp -r "./common/fs" "$BACKUP_DIR/"; fi
-          if [ -d "./common/include/linux" ]; then cp -r "./common/include/linux" "$BACKUP_DIR/"; fi
+          # Enter source directory where patches will be applied
+          cd source
+          
+          # Create backup of target directories
+          for dir in fs include/linux; do
+            if [ -d "$dir" ]; then
+              echo "📦 Backing up $dir..."
+              cp -r "$dir" "../$BACKUP_DIR/"
+            fi
+          done
 
-          PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          # Locate SUSFS patch
+          PATCH_FILE="../../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
           if [ ! -f "$PATCH_FILE" ]; then
             echo "❌ SUSFS patch file not found: $PATCH_FILE"
-            ls -la ../susfs4ksu/kernel_patches/
+            ls -la ../../susfs4ksu/kernel_patches/
             exit 1
           fi
-          
-          # Copy files following the OnePlus workflow pattern
-          cp -f "$PATCH_FILE" ./common/
-          cp -rf ../susfs4ksu/kernel_patches/fs/* ./common/fs/
-          cp -rf ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-          
-          cd ./common
-          echo "� Applying SUSFS patch..."
-          if ! patch -p1 --dry-run -F 3 < "$(basename "$PATCH_FILE")" > patch_test.log 2>&1; then
-            echo "⚠️ Patch dry-run showed conflicts:"
-            cat patch_test.log
-            echo "Attempting to apply patch with fuzz factor..."
-            if ! patch -p1 -F 3 < "$(basename "$PATCH_FILE")" > patch_apply.log 2>&1; then
-              echo "❌ Failed to apply SUSFS patch:"
-              cat patch_apply.log
-              # Restore backups
+
+          echo "🔎 Patch preview (first 120 lines):"
+          sed -n '1,120p' "$PATCH_FILE" || true
+          echo "🔍 Attempting git apply --3way first..."
+
+          # Try git apply --3way first (best for git-origin patches)
+          if git apply --3way --index --check "$PATCH_FILE" 2>&1 | tee git_apply_check.log; then
+            echo "✅ git apply check succeeded; applying --3way..."
+            git apply --3way --index "$PATCH_FILE"
+          else
+            echo "⚠️ git apply failed; trying patch utility with auto-detect..."
+            
+            # Copy required SUSFS files first
+            echo "📂 Copying SUSFS files..."
+            mkdir -p fs include/linux
+            cp -rf ../../susfs4ksu/kernel_patches/fs/* fs/
+            cp -rf ../../susfs4ksu/kernel_patches/include/linux/* include/linux/
+            
+            # Try patch with different -p levels
+            APPLIED=0
+            for P in 0 1 2 3; do
+              echo "🔄 Trying patch -p$P..."
+              if patch --dry-run -p$P < "$PATCH_FILE" > patch_test_p${P}.log 2>&1; then
+                echo "✅ patch -p$P dry-run OK; applying..."
+                if patch -p$P < "$PATCH_FILE"; then
+                  APPLIED=1
+                  break
+                fi
+              fi
+            done
+
+            if [ $APPLIED -eq 0 ]; then
+              echo "❌ All patch attempts failed. Diagnostics:"
+              echo "=== git apply check log ==="
+              cat git_apply_check.log || true
+              for f in patch_test_p*.log; do
+                echo "=== $f ==="
+                cat "$f" || true
+              done
+              
+              echo "Restoring backups..."
               for dir in fs include/linux; do
-                if [ -d "$BACKUP_DIR/$dir" ]; then
-                  rm -rf "./$dir"
-                  cp -r "$BACKUP_DIR/$dir" "./"
+                if [ -d "../$BACKUP_DIR/$dir" ]; then
+                  rm -rf "$dir"
+                  cp -r "../$BACKUP_DIR/$dir" .
                 fi
               done
               exit 1
             fi
-          else
-            patch -p1 -F 3 < "$(basename "$PATCH_FILE")"
           fi
-          
-          # Verify patch success
-          if [ $? -eq 0 ]; then
-            echo "✅ SUSFS patches applied successfully"
+
+          # Final verification
+          if git diff --check; then
+            echo "✅ SUSFS patches applied successfully with clean diff"
           else
-            echo "❌ Failed to apply SUSFS patches"
-            exit 1
+            echo "⚠️ SUSFS patches applied but found whitespace issues"
           fi
 
       # Apply Hide Stuff Patches
@@ -297,7 +327,7 @@ jobs:
           echo "🔨 Applying Hide Stuff patches (SukiSU_patch/69_hide_stuff.patch)..."
 
           PATCH_SRC="../SukiSU_patch/69_hide_stuff.patch"
-          if [ ! -f "$PATCH_SRC" ]; then
+          if [ ! -f "$PATCH_SRC" ]; then          if [ ! -f "$PATCH_SRC" ]; then
             echo "❌ Hide Stuff patch not found: $PATCH_SRC"
             ls -la ../SukiSU_patch || true
             exit 1
