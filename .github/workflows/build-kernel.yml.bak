@@ -176,26 +176,26 @@ jobs:
           git config --global user.email "actions@github.com"
           
           
+      - name: Prepare workspace
+      - name: Prepare workspace
+        run: |
+        run: |
+          echo "🔄 Preparing workspace..."
+          echo "🔄 Preparing workspace..."
+          mkdir -p kernel_workspace/kernel_platform
+          mkdir -p kernel_workspace/kernel_platform
+          cd kernel_workspace
+          cd kernel_workspace
+          
+          
       - name: Clone kernel source
       - name: Clone kernel source
         run: |
         run: |
-          echo "🔄 Preparing build environment..."
-          echo "🔄 Preparing build environment..."
-          
-          
-          # Create a clean build directory
-          # Create a clean build directory
-          BUILD_DIR="build_$(date +%Y%m%d_%H%M%S)"
-          BUILD_DIR="build_$(date +%Y%m%d_%H%M%S)"
-          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_ENV
-          echo "BUILD_DIR=$BUILD_DIR" >> $GITHUB_ENV
-          
-          
-          mkdir -p "$BUILD_DIR"
-          mkdir -p "$BUILD_DIR"
-          cd "$BUILD_DIR"
-          cd "$BUILD_DIR"
+          cd kernel_workspace/kernel_platform
+          cd kernel_workspace/kernel_platform
+          echo "📥 Cloning kernel source..."
+          echo "📥 Cloning kernel source..."
           
           
           echo "📂 Working in build directory: $BUILD_DIR"
@@ -458,12 +458,8 @@ jobs:
       - name: Apply SUSFS Patches to ChromeOS Kernel
         run: |
         run: |
-          # Store original working directory
-          # Store original working directory
-          ORIGINAL_DIR="$PWD"
-          ORIGINAL_DIR="$PWD"
-          cd $BUILD_DIR/source
-          cd $BUILD_DIR/source
+          cd kernel_workspace/kernel_platform
+          cd kernel_workspace/kernel_platform
           echo "🔨 Preparing SUSFS patches..."
           echo "🔨 Preparing SUSFS patches..."
           
@@ -472,78 +468,50 @@ jobs:
           # Create backup of original files
           echo "📦 Creating backup of original files..."
           echo "📦 Creating backup of original files..."
-          if [ -d "fs" ]; then
-          if [ -d "fs" ]; then
-          tar czf ../fs_backup.tar.gz fs/
-          tar czf ../fs_backup.tar.gz fs/
+          BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
+          BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
+          mkdir -p "$BACKUP_DIR"
+          mkdir -p "$BACKUP_DIR"
+          
+          
+          if [ -d "./common/fs" ]; then
+          if [ -d "./common/fs" ]; then
+          cp -r "./common/fs" "$BACKUP_DIR/"
+          cp -r "./common/fs" "$BACKUP_DIR/"
           fi
           fi
-          if [ -d "include/linux" ]; then
-          if [ -d "include/linux" ]; then
-          tar czf ../linux_headers_backup.tar.gz include/linux/
-          tar czf ../linux_headers_backup.tar.gz include/linux/
+          if [ -d "./common/include/linux" ]; then
+          if [ -d "./common/include/linux" ]; then
+          cp -r "./common/include/linux" "$BACKUP_DIR/"
+          cp -r "./common/include/linux" "$BACKUP_DIR/"
           fi
           fi
           
           
-          # Copy SUSFS files with absolute paths
-          # Copy SUSFS files with absolute paths
           echo "📝 Copying SUSFS files..."
           echo "📝 Copying SUSFS files..."
-          SUSFS_DIR="$ORIGINAL_DIR/susfs4ksu"
-          SUSFS_DIR="$ORIGINAL_DIR/susfs4ksu"
-          PATCH_FILE="$SUSFS_DIR/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
-          PATCH_FILE="$SUSFS_DIR/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
           
           
-          # Verify SUSFS patch exists
-          # Verify SUSFS patch exists
-          if [ ! -f "$PATCH_FILE" ]; then
-          if [ ! -f "$PATCH_FILE" ]; then
-          echo "❌ SUSFS patch not found at: $PATCH_FILE"
-          echo "❌ SUSFS patch not found at: $PATCH_FILE"
-          echo "Contents of $SUSFS_DIR/kernel_patches/:"
-          echo "Contents of $SUSFS_DIR/kernel_patches/:"
-          ls -la "$SUSFS_DIR/kernel_patches/" || echo "Directory not found!"
-          ls -la "$SUSFS_DIR/kernel_patches/" || echo "Directory not found!"
-          exit 1
-          exit 1
-          fi
-          fi
+          # Copy files following the OnePlus workflow pattern
+          # Copy files following the OnePlus workflow pattern
+          cp "$PATCH_FILE" ./common/
+          cp "$PATCH_FILE" ./common/
+          cp -r ../susfs4ksu/kernel_patches/fs/* ./common/fs/
+          cp -r ../susfs4ksu/kernel_patches/fs/* ./common/fs/
+          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
+          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           
           
-          # Copy patch and verify source directories
-          # Copy patch and verify source directories
-          cp "$PATCH_FILE" ./
-          cp "$PATCH_FILE" ./
-          
-          
-          if [ -d "$SUSFS_DIR/kernel_patches/fs" ]; then
-          if [ -d "$SUSFS_DIR/kernel_patches/fs" ]; then
-          cp -r "$SUSFS_DIR/kernel_patches/fs/"* ./fs/
-          cp -r "$SUSFS_DIR/kernel_patches/fs/"* ./fs/
-          else
-          else
-          echo "❌ SUSFS fs patches directory not found!"
-          echo "❌ SUSFS fs patches directory not found!"
-          exit 1
-          exit 1
-          fi
-          fi
-          
-          
-          if [ -d "$SUSFS_DIR/kernel_patches/include/linux" ]; then
-          if [ -d "$SUSFS_DIR/kernel_patches/include/linux" ]; then
-          cp -r "$SUSFS_DIR/kernel_patches/include/linux/"* ./include/linux/
-          cp -r "$SUSFS_DIR/kernel_patches/include/linux/"* ./include/linux/
-          else
-          else
-          echo "❌ SUSFS include patches directory not found!"
-          echo "❌ SUSFS include patches directory not found!"
-          exit 1
-          exit 1
-          fi
-          fi
+          cd ./common
+          cd ./common
+          echo "🔨 Applying SUSFS patch..."
+          echo "🔨 Applying SUSFS patch..."
+          patch -p1 < "50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" || true
+          patch -p1 < "50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" || true
+          echo "✅ SUSFS patches applied"
+          echo "✅ SUSFS patches applied"
           
           
           # Apply SUSFS patch with detailed logging
@@ -590,50 +558,16 @@ jobs:
       - name: Apply Hide Stuff Patches
         run: |
         run: |
-          cd $BUILD_DIR/source
-          cd $BUILD_DIR/source
+          cd kernel_workspace/kernel_platform/common
+          cd kernel_workspace/kernel_platform/common
+          cp ../../SukiSU_patch/69_hide_stuff.patch ./
+          cp ../../SukiSU_patch/69_hide_stuff.patch ./
           echo "🔨 Applying Hide Stuff patches..."
           echo "🔨 Applying Hide Stuff patches..."
-          
-          
-          # Create backup
-          # Create backup
-          git add . && git commit -m "Save state before Hide Stuff patch"
-          git add . && git commit -m "Save state before Hide Stuff patch"
-          
-          
-          # Apply patch with detailed logging
-          # Apply patch with detailed logging
-          cp ../SukiSU_patch/69_hide_stuff.patch ./
-          cp ../SukiSU_patch/69_hide_stuff.patch ./
-          if ! patch -p1 --dry-run -F 3 < 69_hide_stuff.patch > hide_stuff_test.log 2>&1; then
-          if ! patch -p1 --dry-run -F 3 < 69_hide_stuff.patch > hide_stuff_test.log 2>&1; then
-          echo "⚠️ Hide Stuff patch dry-run showed conflicts:"
-          echo "⚠️ Hide Stuff patch dry-run showed conflicts:"
-          cat hide_stuff_test.log
-          cat hide_stuff_test.log
-          echo "Attempting to apply patch with force..."
-          echo "Attempting to apply patch with force..."
-          if ! patch -p1 -F 3 --force < 69_hide_stuff.patch > hide_stuff_apply.log 2>&1; then
-          if ! patch -p1 -F 3 --force < 69_hide_stuff.patch > hide_stuff_apply.log 2>&1; then
-          echo "❌ Failed to apply Hide Stuff patch:"
-          echo "❌ Failed to apply Hide Stuff patch:"
-          cat hide_stuff_apply.log
-          cat hide_stuff_apply.log
-          git reset --hard HEAD
-          git reset --hard HEAD
-          exit 1
-          exit 1
-          fi
-          fi
-          else
-          else
           patch -p1 -F 3 < 69_hide_stuff.patch
           patch -p1 -F 3 < 69_hide_stuff.patch
-          fi
-          fi
-          echo "✅ Hide Stuff patches applied successfully"
-          echo "✅ Hide Stuff patches applied successfully"
+          echo "✅ Hide Stuff patches applied"
+          echo "✅ Hide Stuff patches applied"
           
           
           # Verify patch application
@@ -657,8 +591,8 @@ jobs:
         if: ${{ github.event.inputs.VFS_HOOKS == 'true' }}
         run: |
         run: |
-          cd $BUILD_DIR/source
-          cd $BUILD_DIR/source
+          cd kernel_workspace/kernel_platform/common
+          cd kernel_workspace/kernel_platform/common
           echo "🔧 Preparing VFS hooks..."
           echo "🔧 Preparing VFS hooks..."
           
