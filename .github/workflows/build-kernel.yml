@@ -168,22 +168,11 @@ jobs:
           # Create arch/x86/configs directory if it doesn't exist
           mkdir -p arch/x86/configs
           
-          # Apply format-string fix patch for RT scheduler
-          cat > rt-format-fix.patch << 'EOL'
-          diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
-          index abc1234..def5678 100644
-          --- a/kernel/sched/rt.c
-          +++ b/kernel/sched/rt.c
-          @@ -981,7 +981,7 @@ static int sched_rt_runtime_exceeded(struct rt_rq *rt_rq)
-                  if (!rt_rq->rt_time)
-                          return 0;
+          # Fix format string issue directly in the file
+          sed -i 's/printk_deferred_once("suspected host suspend. cpu %d rt_time (%ld)\\n",/printk_deferred_once("suspected host suspend. cpu %d rt_time (%llu)\\n",/' kernel/sched/rt.c
           
-          -        printk_deferred_once("suspected host suspend. cpu %d rt_time (%ld)\n",
-          +        printk_deferred_once("suspected host suspend. cpu %d rt_time (%llu)\n",
-                                      rq_of_rt_rq(rt_rq)->cpu, rt_rq->rt_time);
-                  return 1;
-          }
-          EOL
+          # Apply the patch with more verbose output and force
+          patch -p1 --verbose < rt-format-fix.patch || true
           
           # Apply the format fix patch
           patch -p1 < rt-format-fix.patch
@@ -257,14 +246,18 @@ jobs:
           
           # Set additional compiler flags to handle warnings
           export KCFLAGS="-Wno-error=format-truncation -Wno-error=format"
+          export KCPPFLAGS="-P"
           
-          # First attempt with standard flags
-          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) all || \
-          # If failed, try with additional debug options
-          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) V=1 all
+          # First try with standard options
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) all W=1 \
+            KCFLAGS="$KCFLAGS" KCPPFLAGS="$KCPPFLAGS" || \
+          # If failed, try with additional debug and warning options
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) V=1 W=1 \
+            KCFLAGS="$KCFLAGS" KCPPFLAGS="$KCPPFLAGS"
           
           # Build modules and bzImage
-          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) bzImage modules
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) bzImage modules \
+            KCFLAGS="$KCFLAGS" KCPPFLAGS="$KCPPFLAGS"
           
           if [ ! -f "arch/x86/boot/bzImage" ]; then
             echo "❌ Kernel build failed - bzImage not found"
