@@ -1,0 +1,248 @@
+can't find file to patch at input line 6
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|
+|diff --git a/fs/Makefile b/fs/Makefile
+|index c7851875b668..e951f5487c35 100644
+|--- a/fs/Makefile
+|+++ b/fs/Makefile
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+1 out of 1 hunk ignored
+can't find file to patch at input line 19
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/devpts/inode.c b/fs/devpts/inode.c
+|index 4f25015aa534..099ab024d66a 100644
+|--- a/fs/devpts/inode.c
+|+++ b/fs/devpts/inode.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+3 out of 3 hunks ignored
+can't find file to patch at input line 62
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/exec.c b/fs/exec.c
+|index ced9ab95d385..c34b7d7a637a 100644
+|--- a/fs/exec.c
+|+++ b/fs/exec.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+3 out of 3 hunks ignored
+can't find file to patch at input line 110
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/namei.c b/fs/namei.c
+|index d9268226bff1..340cb472118a 100644
+|--- a/fs/namei.c
+|+++ b/fs/namei.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+19 out of 19 hunks ignored
+can't find file to patch at input line 545
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/namespace.c b/fs/namespace.c
+|index 2c44445fe6c5..0cfbc6ee93d2 100644
+|--- a/fs/namespace.c
+|+++ b/fs/namespace.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+13 out of 13 hunks ignored
+can't find file to patch at input line 942
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/notify/fdinfo.c b/fs/notify/fdinfo.c
+|index 765b50aeadd2..01f7a1e68b81 100644
+|--- a/fs/notify/fdinfo.c
+|+++ b/fs/notify/fdinfo.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+4 out of 4 hunks ignored
+can't find file to patch at input line 1041
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/open.c b/fs/open.c
+|index ee284a93010d..638a64591bce 100644
+|--- a/fs/open.c
+|+++ b/fs/open.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+3 out of 3 hunks ignored
+can't find file to patch at input line 1088
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/proc/base.c b/fs/proc/base.c
+|index d0884f38c0db..ccd797116745 100644
+|--- a/fs/proc/base.c
+|+++ b/fs/proc/base.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+4 out of 4 hunks ignored
+can't find file to patch at input line 1149
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/proc/bootconfig.c b/fs/proc/bootconfig.c
+|index 2e244ada1f97..792e1cb04b11 100644
+|--- a/fs/proc/bootconfig.c
+|+++ b/fs/proc/bootconfig.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+1 out of 1 hunk ignored
+can't find file to patch at input line 1173
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/proc/fd.c b/fs/proc/fd.c
+|index 6b634c0a9b6e..7f1d2ddae326 100644
+|--- a/fs/proc/fd.c
+|+++ b/fs/proc/fd.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+3 out of 3 hunks ignored
+can't find file to patch at input line 1247
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/proc/task_mmu.c b/fs/proc/task_mmu.c
+|index ba8eb5dc6612..5c69b2b12ac4 100644
+|--- a/fs/proc/task_mmu.c
+|+++ b/fs/proc/task_mmu.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+7 out of 7 hunks ignored
+can't find file to patch at input line 1381
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/proc_namespace.c b/fs/proc_namespace.c
+|index eafb75755fa3..8de3f0b8c49b 100644
+|--- a/fs/proc_namespace.c
+|+++ b/fs/proc_namespace.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+4 out of 4 hunks ignored
+can't find file to patch at input line 1443
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/readdir.c b/fs/readdir.c
+|index 09e8ed7d4161..fe6c96984ae4 100644
+|--- a/fs/readdir.c
+|+++ b/fs/readdir.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+21 out of 21 hunks ignored
+can't find file to patch at input line 1896
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/stat.c b/fs/stat.c
+|index c6a2e10983f8..6aeaf76de352 100644
+|--- a/fs/stat.c
+|+++ b/fs/stat.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+5 out of 5 hunks ignored
+can't find file to patch at input line 1972
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/fs/statfs.c b/fs/statfs.c
+|index d42b44dc0e49..0f25c2bddc5d 100644
+|--- a/fs/statfs.c
+|+++ b/fs/statfs.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+3 out of 3 hunks ignored
+can't find file to patch at input line 2023
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/include/linux/mount.h b/include/linux/mount.h
+|index 2f64e66f9c8c..591bca2a690b 100644
+|--- a/include/linux/mount.h
+|+++ b/include/linux/mount.h
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+1 out of 1 hunk ignored
+can't find file to patch at input line 2039
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/kernel/kallsyms.c b/kernel/kallsyms.c
+|index 96505113b907..a7ab0c818ec0 100644
+|--- a/kernel/kallsyms.c
+|+++ b/kernel/kallsyms.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+2 out of 2 hunks ignored
+can't find file to patch at input line 2091
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/kernel/sys.c b/kernel/sys.c
+|index 4e9627616902..aa872531d533 100644
+|--- a/kernel/sys.c
+|+++ b/kernel/sys.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+1 out of 1 hunk ignored
+can't find file to patch at input line 2114
+Perhaps you used the wrong -p or --strip option?
+The text leading up to this was:
+--------------------------
+|diff --git a/security/selinux/avc.c b/security/selinux/avc.c
+|index 7804256b7539..cc6e8630cd31 100644
+|--- a/security/selinux/avc.c
+|+++ b/security/selinux/avc.c
+--------------------------
+File to patch: 
+Skip this patch? [y] 
+Skipping patch.
+2 out of 2 hunks ignored

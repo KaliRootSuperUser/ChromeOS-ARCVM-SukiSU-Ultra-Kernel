@@ -144,24 +144,28 @@ jobs:
           
       - name: Clone SUSFS and Patch Repositories
         run: |
-          echo "📥 Cloning SUSFS and patch repositories..."
-          
+          echo "📥 Cloning SUSFS and patch repositories into kernel_workspace..."
+
+          # Work in kernel_workspace so later steps can reference ../susfs4ksu from kernel_workspace/kernel_platform
+          mkdir -p kernel_workspace
+          cd kernel_workspace
+
           # Clone SUSFS repository with correct branch and retry mechanism
           MAX_RETRIES=3
           RETRY_COUNT=0
           SUSFS_BRANCH="gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}"
-          
+
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "🔄 Cloning SUSFS repository (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
             if git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"; then
-              echo "✅ SUSFS repository cloned successfully"
+              echo "✅ SUSFS repository cloned successfully into $(pwd)/susfs4ksu"
               break
             else
               RETRY_COUNT=$((RETRY_COUNT + 1))
               if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
                 echo "❌ Failed to clone SUSFS repository after $MAX_RETRIES attempts"
                 echo "Branch: $SUSFS_BRANCH"
-                echo "Available branches:"
+                echo "Available branches:" 
                 git ls-remote --heads https://gitlab.com/simonpunk/susfs4ksu.git | sed 's/.*refs\/heads\///'
                 exit 1
               fi
@@ -170,32 +174,37 @@ jobs:
               sleep 5
             fi
           done
-          
+
           # Verify SUSFS repository contents
           echo "🔍 Verifying SUSFS repository..."
+          if [ ! -d "susfs4ksu" ]; then
+            echo "❌ susfs4ksu directory missing at $(pwd)"
+            ls -la
+            exit 1
+          fi
           cd susfs4ksu
           echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
           echo "Checking for required files..."
-          
+
           REQUIRED_FILES=(
             "kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
             "kernel_patches/fs"
             "kernel_patches/include/linux"
           )
-          
+
           for file in "${REQUIRED_FILES[@]}"; do
             if [ ! -e "$file" ]; then
               echo "❌ Required file/directory not found: $file"
-              echo "Repository contents:"
+              echo "Repository contents:" 
               ls -R
               exit 1
             fi
           done
-          
-          echo "✅ SUSFS repository verified"
+
+          echo "✅ SUSFS repository verified at $(pwd)"
           cd ..
-          
-          # Clone SukiSU patch repository with fallback methods
+
+          # Clone SukiSU patch repository with fallback methods into kernel_workspace
           if ! git clone https://github.com/ShirkNeko/SukiSU_patch.git; then
             echo "⚠️ Trying alternate clone method..."
             if ! git clone "https://github.com/ShirkNeko/SukiSU_patch.git" --depth=1; then
@@ -203,27 +212,30 @@ jobs:
               exit 1
             fi
           fi
-          
+
           if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
-            echo "❌ Failed to clone required repositories"
+            echo "❌ Failed to clone required repositories into $(pwd)"
+            ls -la
             exit 1
           fi
-          
-          echo "✅ Successfully cloned required repositories"
-          
+
+          echo "✅ Successfully cloned required repositories into $(pwd)"
+
           # Verify repository contents
-          echo "🔍 Verifying repository contents..."
+          echo "🔍 Verifying repository contents from kernel_workspace..."
           if [ ! -f "susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" ]; then
-            echo "❌ SUSFS patch file not found!"
+            echo "❌ SUSFS patch file not found in kernel_workspace/susfs4ksu/kernel_patches/"
+            ls -la susfs4ksu/kernel_patches || true
             exit 1
           fi
-          
+
           if [ ! -f "SukiSU_patch/69_hide_stuff.patch" ]; then
-            echo "❌ Hide Stuff patch file not found!"
+            echo "❌ Hide Stuff patch file not found in kernel_workspace/SukiSU_patch"
+            ls -la SukiSU_patch || true
             exit 1
           fi
-          
-          echo "✅ Repository contents verified"
+
+          echo "✅ Repository contents verified in kernel_workspace"
 
       # Apply SUSFS Patches
       - name: Apply SUSFS Patches to ChromeOS Kernel
