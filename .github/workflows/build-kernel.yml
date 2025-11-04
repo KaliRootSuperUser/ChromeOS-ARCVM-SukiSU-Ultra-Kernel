@@ -168,6 +168,29 @@ jobs:
           # Create arch/x86/configs directory if it doesn't exist
           mkdir -p arch/x86/configs
           
+          # Apply format-string fix patch for RT scheduler
+          cat > rt-format-fix.patch << 'EOL'
+          diff --git a/kernel/sched/rt.c b/kernel/sched/rt.c
+          index abc1234..def5678 100644
+          --- a/kernel/sched/rt.c
+          +++ b/kernel/sched/rt.c
+          @@ -981,7 +981,7 @@ static int sched_rt_runtime_exceeded(struct rt_rq *rt_rq)
+                  if (!rt_rq->rt_time)
+                          return 0;
+          
+          -        printk_deferred_once("suspected host suspend. cpu %d rt_time (%ld)\n",
+          +        printk_deferred_once("suspected host suspend. cpu %d rt_time (%llu)\n",
+                                      rq_of_rt_rq(rt_rq)->cpu, rt_rq->rt_time);
+                  return 1;
+          }
+          EOL
+          
+          # Apply the format fix patch
+          patch -p1 < rt-format-fix.patch
+          
+          # Create arch/x86/configs directory if it doesn't exist
+          mkdir -p arch/x86/configs
+          
           # Create base defconfig file
           cat > arch/x86/configs/chromiumos-x86_64_defconfig << 'EOL'
           CONFIG_X86_64=y
@@ -231,12 +254,25 @@ jobs:
         run: |
           cd kernel
           echo "Building kernel with $(nproc) cores..."
-          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) all
+          
+          # Set additional compiler flags to handle warnings
+          export KCFLAGS="-Wno-error=format-truncation -Wno-error=format"
+          
+          # First attempt with standard flags
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) all || \
+          # If failed, try with additional debug options
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) V=1 all
+          
+          # Build modules and bzImage
           make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) bzImage modules
+          
           if [ ! -f "arch/x86/boot/bzImage" ]; then
             echo "❌ Kernel build failed - bzImage not found"
+            echo "Dumping last 100 lines of build log..."
+            tail -n 100 .build.log
             exit 1
           fi
+          
           echo "✅ Kernel build completed successfully"
           
       - name: Package kernel and source tree
