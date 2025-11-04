@@ -132,8 +132,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get update
-          sudo apt-get install -y build-essential python3 git curl bc bison flex libssl-dev libelf-dev ccache
-          sudo apt-get install -y build-essential python3 git curl bc bison flex libssl-dev libelf-dev ccache
+          sudo apt-get install -y build-essential python3 git curl bc bison flex libssl-dev libelf-dev ccache \
+          sudo apt-get install -y build-essential python3 git curl bc bison flex libssl-dev libelf-dev ccache \
+          pkg-config zip unzip zlib1g-dev libglib2.0-dev binutils-dev libunwind-dev liblzma-dev lsb-release \
+          pkg-config zip unzip zlib1g-dev libglib2.0-dev binutils-dev libunwind-dev liblzma-dev lsb-release \
+          linux-headers-$(uname -r) dwarves
+          linux-headers-$(uname -r) dwarves
           
           
       - name: Configure Git
@@ -378,6 +382,36 @@ jobs:
           CONFIG_BLK_DEV_INITRD=y
           CONFIG_KALLSYMS_ALL=y
           CONFIG_KALLSYMS_ALL=y
+          CONFIG_LOCALVERSION="-SukiSU-Ultra"
+          CONFIG_LOCALVERSION="-SukiSU-Ultra"
+          CONFIG_LOCALVERSION_AUTO=n
+          CONFIG_LOCALVERSION_AUTO=n
+          CONFIG_SYSVIPC=y
+          CONFIG_SYSVIPC=y
+          CONFIG_POSIX_MQUEUE=y
+          CONFIG_POSIX_MQUEUE=y
+          CONFIG_IKCONFIG=y
+          CONFIG_IKCONFIG=y
+          CONFIG_IKCONFIG_PROC=y
+          CONFIG_IKCONFIG_PROC=y
+          CONFIG_MEMCG=y
+          CONFIG_MEMCG=y
+          CONFIG_BLK_CGROUP=y
+          CONFIG_BLK_CGROUP=y
+          CONFIG_CGROUP_SCHED=y
+          CONFIG_CGROUP_SCHED=y
+          CONFIG_NAMESPACES=y
+          CONFIG_NAMESPACES=y
+          CONFIG_SECURITY=y
+          CONFIG_SECURITY=y
+          CONFIG_SECURITY_NETWORK=y
+          CONFIG_SECURITY_NETWORK=y
+          CONFIG_HARDENED_USERCOPY=y
+          CONFIG_HARDENED_USERCOPY=y
+          CONFIG_STACKPROTECTOR_STRONG=y
+          CONFIG_STACKPROTECTOR_STRONG=y
+          CONFIG_MODULES_TREE_LOOKUP=y
+          CONFIG_MODULES_TREE_LOOKUP=y
           EOL
           EOL
           
@@ -426,16 +460,36 @@ jobs:
         run: |
           cd kernel
           cd kernel
-          make ARCH=x86_64 -j$(nproc) bzImage modules
-          make ARCH=x86_64 -j$(nproc) bzImage modules
+          echo "Building kernel with $(nproc) cores..."
+          echo "Building kernel with $(nproc) cores..."
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) all
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) all
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) bzImage modules
+          make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) bzImage modules
+          if [ ! -f "arch/x86/boot/bzImage" ]; then
+          if [ ! -f "arch/x86/boot/bzImage" ]; then
+          echo "❌ Kernel build failed - bzImage not found"
+          echo "❌ Kernel build failed - bzImage not found"
+          exit 1
+          exit 1
+          fi
+          fi
+          echo "✅ Kernel build completed successfully"
+          echo "✅ Kernel build completed successfully"
           
           
-      - name: Package kernel
-      - name: Package kernel
+      - name: Package kernel and source tree
+      - name: Package kernel and source tree
         run: |
         run: |
-          echo "Creating kernel package..."
-          echo "Creating kernel package..."
+          echo "📦 Creating kernel packages..."
+          echo "📦 Creating kernel packages..."
+          
+          
+          # Create compiled kernel package
+          # Create compiled kernel package
+          echo "Creating compiled kernel package..."
+          echo "Creating compiled kernel package..."
           mkdir -p dist/kernel
           mkdir -p dist/kernel
           cp kernel/arch/x86/boot/bzImage dist/kernel/
@@ -450,20 +504,78 @@ jobs:
           cd dist
           zip -r ChromeOS-ARCVM-x86_64-SukiSU-Ultra-Kernel.zip kernel/
           zip -r ChromeOS-ARCVM-x86_64-SukiSU-Ultra-Kernel.zip kernel/
-          echo "✅ Kernel package prepared"
-          echo "✅ Kernel package prepared"
+          echo "✅ Compiled kernel package prepared"
+          echo "✅ Compiled kernel package prepared"
           
           
-      - name: Upload kernel package
-      - name: Upload kernel package
+          # Create source tree package
+          # Create source tree package
+          echo "Creating source tree package..."
+          echo "Creating source tree package..."
+          cd ..
+          cd ..
+          echo "Preparing source tree for packaging..."
+          echo "Preparing source tree for packaging..."
+          
+          
+          # Clean build artifacts before packaging source
+          # Clean build artifacts before packaging source
+          cd kernel
+          cd kernel
+          make clean
+          make clean
+          
+          
+          # Create source package directory
+          # Create source package directory
+          cd ..
+          cd ..
+          mkdir -p dist/source_tree
+          mkdir -p dist/source_tree
+          
+          
+          # Copy the complete modified kernel source
+          # Copy the complete modified kernel source
+          cp -r kernel/* dist/source_tree/
+          cp -r kernel/* dist/source_tree/
+          
+          
+          # Create source tree archive
+          # Create source tree archive
+          cd dist
+          cd dist
+          tar -czf ARCVM-x86_64-SUKISU-ULTRA-SUSFS-ROOTED-KERNEL-SOURCE.tar.gz source_tree/
+          tar -czf ARCVM-x86_64-SUKISU-ULTRA-SUSFS-ROOTED-KERNEL-SOURCE.tar.gz source_tree/
+          echo "✅ Source tree package prepared"
+          echo "✅ Source tree package prepared"
+          
+          
+      - name: Upload compiled kernel package
+      - name: Upload compiled kernel package
         uses: actions/upload-artifact@v4
         uses: actions/upload-artifact@v4
         with:
         with:
-          name: kernel-package
-          name: kernel-package
+          name: compiled-kernel
+          name: compiled-kernel
           path: dist/ChromeOS-ARCVM-x86_64-SukiSU-Ultra-Kernel.zip
           path: dist/ChromeOS-ARCVM-x86_64-SukiSU-Ultra-Kernel.zip
+          compression-level: 9
+          compression-level: 9
+          retention-days: 90
+          retention-days: 90
+          
+          
+      - name: Upload source tree package
+      - name: Upload source tree package
+        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4
+        with:
+        with:
+          name: kernel-source-tree
+          name: kernel-source-tree
+          path: dist/ARCVM-x86_64-SUKISU-ULTRA-SUSFS-ROOTED-KERNEL-SOURCE.tar.gz
+          path: dist/ARCVM-x86_64-SUKISU-ULTRA-SUSFS-ROOTED-KERNEL-SOURCE.tar.gz
           compression-level: 9
           compression-level: 9
           retention-days: 90
