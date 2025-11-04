@@ -78,17 +78,21 @@ jobs:
           cd kernel
           
       - name: Clone SUSFS and Patch Repositories
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "📥 Cloning SUSFS and patch repositories..."
           
-          # Try multiple methods to clone SUSFS repository
-          git clone https://${GH_TOKEN}@github.com/HuskyDG/susfs4ksu.git --depth=1 || \
-          git clone https://github.com/HuskyDG/susfs4ksu.git --depth=1 || \
-          git clone git://github.com/HuskyDG/susfs4ksu.git --depth=1 || \
-          wget https://github.com/HuskyDG/susfs4ksu/archive/refs/heads/main.zip -O susfs4ksu.zip && \
-          unzip susfs4ksu.zip && mv susfs4ksu-main susfs4ksu
+          # Clone SUSFS repository with correct branch
+          git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}
+          
+          # Clone SukiSU patch repository
+          git clone https://github.com/ShirkNeko/SukiSU_patch.git
+          
+          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
+            echo "❌ Failed to clone required repositories"
+            exit 1
+          fi
+          
+          echo "✅ Successfully cloned required repositories"
           
           # Try multiple methods to clone SukiSU patch repository
           git clone https://${GH_TOKEN}@github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
@@ -105,43 +109,56 @@ jobs:
           
           echo "✅ Successfully cloned required repositories"
 
+      # Apply SUSFS Patches
       - name: Apply SUSFS Patches to ChromeOS Kernel
         run: |
           cd kernel
-          echo "🔨 Applying SUSFS patches to ChromeOS kernel..."
+          echo "🔨 Applying SUSFS patches..."
           
-          # Verify patch file exists
-          PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
-          if [ ! -f "$PATCH_FILE" ]; then
-            echo "❌ SUSFS patch file not found: $PATCH_FILE"
-            exit 1
-          fi
+          # Copy and apply SUSFS patches
+          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch ./
+          cp -r ../susfs4ksu/kernel_patches/fs/* ./fs/
+          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
           
-          # Copy SUSFS patches
-          cp "$PATCH_FILE" ./
-          cp -r ../susfs4ksu/kernel_patches/fs/* ./fs/ 2>/dev/null || true
-          cp -r ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/ 2>/dev/null || true
+          patch -p1 < 50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch || true
+          echo "✅ SUSFS patches applied"
+
+      # Apply Hide Stuff Patches
+      - name: Apply Hide Stuff Patches
+        run: |
+          cd kernel
+          cp ../SukiSU_patch/69_hide_stuff.patch ./
+          echo "🔨 Applying Hide Stuff patches..."
+          patch -p1 -F 3 < 69_hide_stuff.patch
+          echo "✅ Hide Stuff patches applied"
+
+      # Apply VFS Hooks if enabled
+      - name: Apply VFS Hooks
+        if: ${{ github.event.inputs.VFS == 'true' }}
+        run: |
+          cd kernel
+          cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
+          echo "� Applying VFS hooks..."
+          patch -p1 -F 3 < syscall_hooks.patch
+          echo "✅ VFS hooks applied"
+
+      # Apply ZRAM enhancements if enabled
+      - name: Apply ZRAM Enhancements
+        if: ${{ github.event.inputs.ZRAM == 'true' }}
+        run: |
+          cd kernel
+          echo "� Applying ZRAM enhancements..."
           
-          # Apply SukiSU patches
-          git apply --ignore-whitespace "$PATCH_FILE"
-          git apply --ignore-whitespace ../SukiSU_patch/sukisu_ultra_core.patch
+          # Copy ZRAM related files
+          cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./include/linux
+          cp -r ../SukiSU_patch/other/zram/lz4k/lib/* ./lib
+          cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./crypto
+          cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./lib/
           
-          if [[ "${{ github.event.inputs.VFS }}" == "true" ]]; then
-            echo "🔧 Enabling VFS manual hooks..."
-            git apply --ignore-whitespace ../SukiSU_patch/vfs_manual_hooks.patch
-          fi
-          
-          if [[ "${{ github.event.inputs.KPM }}" == "true" ]]; then
-            echo "🔧 Enabling KPM support..."
-            git apply --ignore-whitespace ../SukiSU_patch/kpm_support.patch
-          fi
-          
-          if [[ "${{ github.event.inputs.ZRAM }}" == "true" ]]; then
-            echo "🔧 Enabling ZRAM enhancement..."
-            git apply --ignore-whitespace ../SukiSU_patch/zram_enhancement.patch
-          fi
-          
-          echo "✅ All patches applied successfully"
+          # Apply LZ4KD patch if kernel version matches
+          cp ../SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch ./
+          patch -p1 -F 3 < lz4kd.patch || true
+          echo "✅ ZRAM enhancements applied"
           
       - name: Configure kernel
         run: |
