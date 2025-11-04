@@ -282,8 +282,8 @@ jobs:
           echo "Branch: $(git rev-parse --abbrev-ref HEAD)"
           echo "Commit: $(git rev-parse HEAD)"
           echo "Commit: $(git rev-parse HEAD)"
-          echo "Date: $(git log -1 --format=%cd)
-          echo "Date: $(git log -1 --format=%cd)
+          echo "Date: $(git log -1 --format='%cd')"
+          echo "Date: $(git log -1 --format='%cd')"
           
           
       - name: Clone SUSFS and Patch Repositories
