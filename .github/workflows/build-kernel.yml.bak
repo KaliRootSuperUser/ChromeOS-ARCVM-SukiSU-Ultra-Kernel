@@ -326,20 +326,98 @@ jobs:
         run: |
           cd kernel
           cd kernel
-          make ARCH=x86_64 chromiumos-x86_64_defconfig
-          make ARCH=x86_64 chromiumos-x86_64_defconfig
-          scripts/config --enable CONFIG_KSU
-          scripts/config --enable CONFIG_KSU
-          scripts/config --enable CONFIG_KPM
-          scripts/config --enable CONFIG_KPM
+          # Create arch/x86/configs directory if it doesn't exist
+          # Create arch/x86/configs directory if it doesn't exist
+          mkdir -p arch/x86/configs
+          mkdir -p arch/x86/configs
           
           
+          # Create base defconfig file
+          # Create base defconfig file
+          cat > arch/x86/configs/chromiumos-x86_64_defconfig << 'EOL'
+          cat > arch/x86/configs/chromiumos-x86_64_defconfig << 'EOL'
+          CONFIG_X86_64=y
+          CONFIG_X86_64=y
+          CONFIG_64BIT=y
+          CONFIG_64BIT=y
+          CONFIG_SMP=y
+          CONFIG_SMP=y
+          CONFIG_MODULES=y
+          CONFIG_MODULES=y
+          CONFIG_MODULE_UNLOAD=y
+          CONFIG_MODULE_UNLOAD=y
+          CONFIG_MODVERSIONS=y
+          CONFIG_MODVERSIONS=y
+          CONFIG_PARTITION_ADVANCED=y
+          CONFIG_PARTITION_ADVANCED=y
+          CONFIG_EFI=y
+          CONFIG_EFI=y
+          CONFIG_EFI_STUB=y
+          CONFIG_EFI_STUB=y
+          CONFIG_FB=y
+          CONFIG_FB=y
+          CONFIG_FRAMEBUFFER_CONSOLE=y
+          CONFIG_FRAMEBUFFER_CONSOLE=y
+          CONFIG_MAGIC_SYSRQ=y
+          CONFIG_MAGIC_SYSRQ=y
+          CONFIG_MAGIC_SYSRQ_DEFAULT_ENABLE=0x1
+          CONFIG_MAGIC_SYSRQ_DEFAULT_ENABLE=0x1
+          CONFIG_MAGIC_SYSRQ_SERIAL=y
+          CONFIG_MAGIC_SYSRQ_SERIAL=y
+          CONFIG_EARLY_PRINTK=y
+          CONFIG_EARLY_PRINTK=y
+          CONFIG_RANDOMIZE_BASE=y
+          CONFIG_RANDOMIZE_BASE=y
+          CONFIG_ZBOOT_ROM_TEXT=0x0
+          CONFIG_ZBOOT_ROM_TEXT=0x0
+          CONFIG_ZBOOT_ROM_BSS=0x0
+          CONFIG_ZBOOT_ROM_BSS=0x0
+          CONFIG_PROC_KCORE=y
+          CONFIG_PROC_KCORE=y
+          CONFIG_BLK_DEV_INITRD=y
+          CONFIG_BLK_DEV_INITRD=y
+          CONFIG_KALLSYMS_ALL=y
+          CONFIG_KALLSYMS_ALL=y
+          EOL
+          EOL
+          
+          
+          # Apply base configuration
+          # Apply base configuration
+          make ARCH=x86_64 chromiumos-x86_64_defconfig
+          make ARCH=x86_64 chromiumos-x86_64_defconfig
+          
+          
+          # Configure additional kernel options
+          # Configure additional kernel options
+          cat >> .config << 'EOL'
+          cat >> .config << 'EOL'
+          CONFIG_KSU=y
+          CONFIG_KSU=y
+          CONFIG_KPM=y
+          CONFIG_KPM=y
+          CONFIG_LOCALVERSION="-SukiSU-Ultra"
+          CONFIG_LOCALVERSION="-SukiSU-Ultra"
+          CONFIG_LOCALVERSION_AUTO=n
+          CONFIG_LOCALVERSION_AUTO=n
+          EOL
+          EOL
+          
+          
+          # Enable VFS hooks if requested
+          # Enable VFS hooks if requested
           if [[ "${{ github.event.inputs.VFS_HOOKS }}" == "true" ]]; then
           if [[ "${{ github.event.inputs.VFS_HOOKS }}" == "true" ]]; then
-          scripts/config --enable CONFIG_KSU_MANUAL_HOOK
-          scripts/config --enable CONFIG_KSU_MANUAL_HOOK
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> .config
+          echo "CONFIG_KSU_MANUAL_HOOK=y" >> .config
           fi
           fi
+          
+          
+          # Update configuration
+          # Update configuration
+          make ARCH=x86_64 olddefconfig
+          make ARCH=x86_64 olddefconfig
           
           
       - name: Build kernel
