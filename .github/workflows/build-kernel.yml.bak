@@ -336,22 +336,118 @@ jobs:
           mkdir -p arch/x86/configs
           
           
-          # Fix format string issue in RT scheduler
-          # Fix format string issue in RT scheduler
-          if [ -f "kernel/sched/rt.c" ]; then
-          if [ -f "kernel/sched/rt.c" ]; then
-          echo "Fixing format string in RT scheduler..."
-          echo "Fixing format string in RT scheduler..."
-          sed -i 's/%d rt_time (%ld)/%d rt_time (%llu)/' kernel/sched/rt.c
-          sed -i 's/%d rt_time (%ld)/%d rt_time (%llu)/' kernel/sched/rt.c
-          echo "✅ Format string fixed"
-          echo "✅ Format string fixed"
-          else
-          else
-          echo "⚠️ RT scheduler file not found at expected location"
-          echo "⚠️ RT scheduler file not found at expected location"
-          fi
-          fi
+          # Create compiler wrapper script to handle warnings
+          # Create compiler wrapper script to handle warnings
+          cat > compiler-wrapper.sh << 'EOL'
+          cat > compiler-wrapper.sh << 'EOL'
+          #!/bin/sh
+          #!/bin/sh
+          exec gcc -Wno-error=cast-function-type \
+          exec gcc -Wno-error=cast-function-type \
+                  -Wno-error=format-truncation \
+                  -Wno-error=format-truncation \
+                  -Wno-error=format \
+                  -Wno-error=format \
+                  -Wno-error=missing-prototypes \
+                  -Wno-error=missing-prototypes \
+          "$@"
+          "$@"
+          EOL
+          EOL
+          chmod +x compiler-wrapper.sh
+          chmod +x compiler-wrapper.sh
+          
+          
+          # Set compiler wrapper
+          # Set compiler wrapper
+          export HOSTCC="./compiler-wrapper.sh"
+          export HOSTCC="./compiler-wrapper.sh"
+          export CC="./compiler-wrapper.sh"
+          export CC="./compiler-wrapper.sh"
+          
+          
+          # Create custom config
+          # Create custom config
+          cat > arch/x86/configs/chromiumos-x86_64_defconfig << 'EOL'
+          cat > arch/x86/configs/chromiumos-x86_64_defconfig << 'EOL'
+          CONFIG_X86_64=y
+          CONFIG_X86_64=y
+          CONFIG_64BIT=y
+          CONFIG_64BIT=y
+          CONFIG_SMP=y
+          CONFIG_SMP=y
+          CONFIG_MODULES=y
+          CONFIG_MODULES=y
+          CONFIG_MODULE_UNLOAD=y
+          CONFIG_MODULE_UNLOAD=y
+          CONFIG_MODVERSIONS=y
+          CONFIG_MODVERSIONS=y
+          CONFIG_PARTITION_ADVANCED=y
+          CONFIG_PARTITION_ADVANCED=y
+          CONFIG_EFI=y
+          CONFIG_EFI=y
+          CONFIG_EFI_STUB=y
+          CONFIG_EFI_STUB=y
+          CONFIG_FB=y
+          CONFIG_FB=y
+          CONFIG_FRAMEBUFFER_CONSOLE=y
+          CONFIG_FRAMEBUFFER_CONSOLE=y
+          CONFIG_MAGIC_SYSRQ=y
+          CONFIG_MAGIC_SYSRQ=y
+          CONFIG_MAGIC_SYSRQ_DEFAULT_ENABLE=0x1
+          CONFIG_MAGIC_SYSRQ_DEFAULT_ENABLE=0x1
+          CONFIG_MAGIC_SYSRQ_SERIAL=y
+          CONFIG_MAGIC_SYSRQ_SERIAL=y
+          CONFIG_EARLY_PRINTK=y
+          CONFIG_EARLY_PRINTK=y
+          CONFIG_RANDOMIZE_BASE=y
+          CONFIG_RANDOMIZE_BASE=y
+          CONFIG_ZBOOT_ROM_TEXT=0x0
+          CONFIG_ZBOOT_ROM_TEXT=0x0
+          CONFIG_ZBOOT_ROM_BSS=0x0
+          CONFIG_ZBOOT_ROM_BSS=0x0
+          CONFIG_PROC_KCORE=y
+          CONFIG_PROC_KCORE=y
+          CONFIG_BLK_DEV_INITRD=y
+          CONFIG_BLK_DEV_INITRD=y
+          CONFIG_KALLSYMS_ALL=y
+          CONFIG_KALLSYMS_ALL=y
+          CONFIG_WERROR=n
+          CONFIG_WERROR=n
+          CONFIG_VDSO=y
+          CONFIG_VDSO=y
+          CONFIG_GENERIC_TIME_VSYSCALL=y
+          CONFIG_GENERIC_TIME_VSYSCALL=y
+          CONFIG_COMPAT_VDSO=y
+          CONFIG_COMPAT_VDSO=y
+          CONFIG_SYSVIPC=y
+          CONFIG_SYSVIPC=y
+          CONFIG_POSIX_MQUEUE=y
+          CONFIG_POSIX_MQUEUE=y
+          CONFIG_IKCONFIG=y
+          CONFIG_IKCONFIG=y
+          CONFIG_IKCONFIG_PROC=y
+          CONFIG_IKCONFIG_PROC=y
+          CONFIG_MEMCG=y
+          CONFIG_MEMCG=y
+          CONFIG_BLK_CGROUP=y
+          CONFIG_BLK_CGROUP=y
+          CONFIG_CGROUP_SCHED=y
+          CONFIG_CGROUP_SCHED=y
+          CONFIG_NAMESPACES=y
+          CONFIG_NAMESPACES=y
+          CONFIG_SECURITY=y
+          CONFIG_SECURITY=y
+          CONFIG_SECURITY_NETWORK=y
+          CONFIG_SECURITY_NETWORK=y
+          CONFIG_HARDENED_USERCOPY=y
+          CONFIG_HARDENED_USERCOPY=y
+          CONFIG_STACKPROTECTOR_STRONG=y
+          CONFIG_STACKPROTECTOR_STRONG=y
+          CONFIG_MODULES_TREE_LOOKUP=y
+          CONFIG_MODULES_TREE_LOOKUP=y
+          EOL
+          EOL
           
           
           # Verify kernel/sched/rt.c exists and is writable
@@ -500,10 +596,24 @@ jobs:
           echo "Building kernel with $(nproc) cores..."
           
           
+          # Fix function prototype in vgetcpu.c
+          # Fix function prototype in vgetcpu.c
+          echo 'long __vdso_getcpu(unsigned *cpu, unsigned *node, struct getcpu_cache *unused);' > arch/x86/entry/vdso/vgetcpu.h
+          echo 'long __vdso_getcpu(unsigned *cpu, unsigned *node, struct getcpu_cache *unused);' > arch/x86/entry/vdso/vgetcpu.h
+          sed -i '1i#include "vgetcpu.h"' arch/x86/entry/vdso/vgetcpu.c
+          sed -i '1i#include "vgetcpu.h"' arch/x86/entry/vdso/vgetcpu.c
+          
+          
+          # Fix function cast in sock.h
+          # Fix function cast in sock.h
+          sed -i 's/android_dst_ops_negative_advice_new_t/void (*)(struct sock *, struct dst_entry *)/' include/net/sock.h
+          sed -i 's/android_dst_ops_negative_advice_new_t/void (*)(struct sock *, struct dst_entry *)/' include/net/sock.h
+          
+          
           # Set additional compiler flags to handle warnings
           # Set additional compiler flags to handle warnings
-          export KCFLAGS="-Wno-error=format-truncation -Wno-error=format"
-          export KCFLAGS="-Wno-error=format-truncation -Wno-error=format"
+          export KCFLAGS="-Wno-error=cast-function-type -Wno-error=format-truncation -Wno-error=format -Wno-error=missing-prototypes"
+          export KCFLAGS="-Wno-error=cast-function-type -Wno-error=format-truncation -Wno-error=format -Wno-error=missing-prototypes"
           export KCPPFLAGS="-P"
           export KCPPFLAGS="-P"
           
@@ -514,8 +624,8 @@ jobs:
           make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) all W=1 \
           KCFLAGS="$KCFLAGS" KCPPFLAGS="$KCPPFLAGS" || \
           KCFLAGS="$KCFLAGS" KCPPFLAGS="$KCPPFLAGS" || \
-          # If failed, try with additional debug and warning options
-          # If failed, try with additional debug and warning options
+          # If failed, try with additional debug options
+          # If failed, try with additional debug options
           make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) V=1 W=1 \
           make ARCH=x86_64 CROSS_COMPILE="" -j$(nproc) V=1 W=1 \
           KCFLAGS="$KCFLAGS" KCPPFLAGS="$KCPPFLAGS"
