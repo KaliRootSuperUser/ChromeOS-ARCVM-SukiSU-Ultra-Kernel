@@ -64,10 +64,23 @@ jobs:
           
       - name: Setup build environment
         run: |
+          echo "🔄 Updating package lists..."
           sudo apt-get update
+          
+          echo "📦 Installing build dependencies..."
           sudo apt-get install -y build-essential python3 git curl bc bison flex libssl-dev libelf-dev ccache \
             pkg-config zip unzip zlib1g-dev libglib2.0-dev binutils-dev libunwind-dev liblzma-dev lsb-release \
             linux-headers-$(uname -r) dwarves
+          
+          echo "🔍 Verifying installed packages..."
+          for pkg in gcc make python3 git curl bc bison flex ccache; do
+            if ! command -v $pkg &> /dev/null; then
+              echo "❌ Required tool $pkg not found!"
+              exit 1
+            fi
+          done
+          
+          echo "✅ Build environment setup complete"
           
       - name: Configure Git
         run: |
@@ -86,8 +99,14 @@ jobs:
           # Clone SUSFS repository with correct branch
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}
           
-          # Clone SukiSU patch repository
-          git clone https://github.com/ShirkNeko/SukiSU_patch.git
+          # Clone SukiSU patch repository with fallback methods
+          if ! git clone https://github.com/ShirkNeko/SukiSU_patch.git; then
+            echo "⚠️ Trying alternate clone method..."
+            if ! git clone "https://github.com/ShirkNeko/SukiSU_patch.git" --depth=1; then
+              echo "❌ Failed to clone SukiSU patch repository"
+              exit 1
+            fi
+          fi
           
           if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
             echo "❌ Failed to clone required repositories"
@@ -96,88 +115,367 @@ jobs:
           
           echo "✅ Successfully cloned required repositories"
           
-          # Try multiple methods to clone SukiSU patch repository
-          git clone https://${GH_TOKEN}@github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
-          git clone https://github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
-          git clone git://github.com/ShirkNeko/SukiSU_patch.git --depth=1 || \
-          wget https://github.com/ShirkNeko/SukiSU_patch/archive/refs/heads/main.zip -O sukisu_patch.zip && \
-          unzip sukisu_patch.zip && mv SukiSU_patch-main SukiSU_patch
-          
-          # Check if repositories were cloned successfully
-          if [ ! -d "susfs4ksu" ] || [ ! -d "SukiSU_patch" ]; then
-            echo "❌ Failed to clone required repositories"
+          # Verify repository contents
+          echo "🔍 Verifying repository contents..."
+          if [ ! -f "susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch" ]; then
+            echo "❌ SUSFS patch file not found!"
             exit 1
           fi
           
-          echo "✅ Successfully cloned required repositories"
+          if [ ! -f "SukiSU_patch/69_hide_stuff.patch" ]; then
+            echo "❌ Hide Stuff patch file not found!"
+            exit 1
+          fi
+          
+          echo "✅ Repository contents verified"
 
       # Apply SUSFS Patches
       - name: Apply SUSFS Patches to ChromeOS Kernel
         run: |
           cd kernel
-          echo "🔨 Applying SUSFS patches..."
+          echo "🔨 Preparing SUSFS patches..."
           
-          # Copy and apply SUSFS patches
-          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch ./
+          # Create backup of original files
+          echo "📦 Creating backup of original files..."
+          if [ -d "fs" ]; then
+            tar czf ../fs_backup.tar.gz fs/
+          fi
+          if [ -d "include/linux" ]; then
+            tar czf ../linux_headers_backup.tar.gz include/linux/
+          fi
+          
+          # Copy SUSFS files
+          echo "📝 Copying SUSFS files..."
+          PATCH_FILE="../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch"
+          cp "$PATCH_FILE" ./
           cp -r ../susfs4ksu/kernel_patches/fs/* ./fs/
           cp -r ../susfs4ksu/kernel_patches/include/linux/* ./include/linux/
           
-          patch -p1 < 50_add_susfs_in_gki-${{ github.event.inputs.ANDROID_VERSION }}-${{ github.event.inputs.KERNEL_VERSION }}.patch || true
-          echo "✅ SUSFS patches applied"
+          # Apply SUSFS patch with detailed logging
+          echo "🔧 Applying SUSFS patch..."
+          if ! patch -p1 --dry-run < "$(basename "$PATCH_FILE")" > patch_test.log 2>&1; then
+            echo "⚠️ Patch dry-run showed conflicts:"
+            cat patch_test.log
+            echo "Attempting to apply patch with fuzz factor..."
+            if ! patch -p1 -F 3 < "$(basename "$PATCH_FILE")" > patch_apply.log 2>&1; then
+              echo "❌ Failed to apply SUSFS patch:"
+              cat patch_apply.log
+              # Restore backups
+              tar xzf ../fs_backup.tar.gz
+              tar xzf ../linux_headers_backup.tar.gz
+              exit 1
+            fi
+          else
+            patch -p1 < "$(basename "$PATCH_FILE")"
+          fi
+          echo "✅ SUSFS patches applied successfully"
 
       # Apply Hide Stuff Patches
       - name: Apply Hide Stuff Patches
         run: |
           cd kernel
-          cp ../SukiSU_patch/69_hide_stuff.patch ./
           echo "🔨 Applying Hide Stuff patches..."
-          patch -p1 -F 3 < 69_hide_stuff.patch
+          
+          # Create backup
+          git add . && git commit -m "Save state before Hide Stuff patch"
+          
+          # Apply patch with detailed logging
+          cp ../SukiSU_patch/69_hide_stuff.patch ./
+          if ! patch -p1 --dry-run -F 3 < 69_hide_stuff.patch > hide_stuff_test.log 2>&1; then
+            echo "⚠️ Hide Stuff patch dry-run showed conflicts:"
+            cat hide_stuff_test.log
+            echo "Attempting to apply patch with force..."
+            if ! patch -p1 -F 3 --force < 69_hide_stuff.patch > hide_stuff_apply.log 2>&1; then
+              echo "❌ Failed to apply Hide Stuff patch:"
+              cat hide_stuff_apply.log
+              git reset --hard HEAD
+              exit 1
+            fi
+          else
+            patch -p1 -F 3 < 69_hide_stuff.patch
+          fi
+          echo "✅ Hide Stuff patches applied successfully"
+          
+          # Verify patch application
+          echo "🔍 Verifying patches..."
+          if ! git diff --check; then
+            echo "⚠️ Warning: Patch verification found whitespace errors"
+          fi
           echo "✅ Hide Stuff patches applied"
 
       # Apply VFS Hooks if enabled
       - name: Apply VFS Hooks
-        if: ${{ github.event.inputs.VFS == 'true' }}
+        if: ${{ github.event.inputs.VFS_HOOKS == 'true' }}
         run: |
           cd kernel
+          echo "🔧 Preparing VFS hooks..."
+          
+          # Verify hook patch exists
+          if [ ! -f "../SukiSU_patch/hooks/syscall_hooks.patch" ]; then
+            echo "❌ VFS hooks patch not found!"
+            exit 1
+          fi
+          
+          # Create backup
+          git add . && git commit -m "Save state before VFS hooks"
+          
+          # Copy and verify patch
           cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
-          echo "� Applying VFS hooks..."
-          patch -p1 -F 3 < syscall_hooks.patch
-          echo "✅ VFS hooks applied"
+          
+          echo "🔨 Applying VFS hooks..."
+          if ! patch -p1 --dry-run -F 3 < syscall_hooks.patch > vfs_hooks_test.log 2>&1; then
+            echo "⚠️ VFS hooks patch dry-run showed conflicts:"
+            cat vfs_hooks_test.log
+            echo "Attempting to apply patch with force..."
+            if ! patch -p1 -F 3 --force < syscall_hooks.patch > vfs_hooks_apply.log 2>&1; then
+              echo "❌ Failed to apply VFS hooks patch:"
+              cat vfs_hooks_apply.log
+              git reset --hard HEAD
+              exit 1
+            fi
+          else
+            patch -p1 -F 3 < syscall_hooks.patch
+          fi
+          
+          # Verify patch application
+          if ! git diff --check; then
+            echo "⚠️ Warning: VFS hooks patch verification found whitespace errors"
+          fi
+          echo "✅ VFS hooks applied successfully"
 
       # Apply ZRAM enhancements if enabled
       - name: Apply ZRAM Enhancements
         if: ${{ github.event.inputs.ZRAM == 'true' }}
         run: |
           cd kernel
-          echo "� Applying ZRAM enhancements..."
+          echo "🔧 Preparing ZRAM enhancements..."
           
-          # Copy ZRAM related files
-          cp -r ../SukiSU_patch/other/zram/lz4k/include/linux/* ./include/linux
-          cp -r ../SukiSU_patch/other/zram/lz4k/lib/* ./lib
-          cp -r ../SukiSU_patch/other/zram/lz4k/crypto/* ./crypto
-          cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./lib/
+          # Verify ZRAM files exist
+          for dir in "include/linux" "lib" "crypto"; do
+            if [ ! -d "../SukiSU_patch/other/zram/lz4k/$dir" ]; then
+              echo "❌ ZRAM directory not found: $dir"
+              exit 1
+            fi
+          done
           
-          # Apply LZ4KD patch if kernel version matches
-          cp ../SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch ./
-          patch -p1 -F 3 < lz4kd.patch || true
-          echo "✅ ZRAM enhancements applied"
+          # Create backup of target directories
+          for dir in "include/linux" "lib" "crypto"; do
+            if [ -d "$dir" ]; then
+              tar czf "../${dir//\//_}_backup.tar.gz" "$dir/"
+            fi
+          done
+          
+          echo "📦 Copying ZRAM files..."
+          # Copy ZRAM related files with error checking
+          for src in "../SukiSU_patch/other/zram/lz4k/include/linux" "../SukiSU_patch/other/zram/lz4k/lib" "../SukiSU_patch/other/zram/lz4k/crypto"; do
+            dest="${src#../SukiSU_patch/other/zram/lz4k/}"
+            if ! cp -r "$src"/* "./$dest/"; then
+              echo "❌ Failed to copy ZRAM files from $src"
+              # Restore backups
+              for backup in ../*_backup.tar.gz; do
+                dir="${backup##*/}_backup.tar.gz"
+                dir="${dir%_backup.tar.gz}"
+                dir="${dir//_//}"
+                tar xzf "$backup"
+              done
+              exit 1
+            fi
+          done
+          
+          # Copy LZ4K Oplus with verification
+          if [ -d "../SukiSU_patch/other/zram/lz4k_oplus" ]; then
+            cp -r ../SukiSU_patch/other/zram/lz4k_oplus ./lib/
+          else
+            echo "⚠️ LZ4K Oplus directory not found, skipping..."
+          fi
+          
+          # Apply LZ4KD patch if available
+          ZRAM_PATCH="../SukiSU_patch/other/zram/zram_patch/${{ github.event.inputs.KERNEL_VERSION }}/lz4kd.patch"
+          if [ -f "$ZRAM_PATCH" ]; then
+            echo "🔨 Applying LZ4KD patch..."
+            cp "$ZRAM_PATCH" ./
+            
+            if ! patch -p1 --dry-run -F 3 < lz4kd.patch > zram_test.log 2>&1; then
+              echo "⚠️ LZ4KD patch dry-run showed conflicts:"
+              cat zram_test.log
+              echo "Attempting to apply patch with force..."
+              if ! patch -p1 -F 3 --force < lz4kd.patch > zram_apply.log 2>&1; then
+                echo "❌ Failed to apply LZ4KD patch:"
+                cat zram_apply.log
+                # Restore from backups
+                for backup in ../*_backup.tar.gz; do
+                  dir="${backup##*/}_backup.tar.gz"
+                  dir="${dir%_backup.tar.gz}"
+                  dir="${dir//_//}"
+                  tar xzf "$backup"
+                done
+                exit 1
+              fi
+            else
+              patch -p1 -F 3 < lz4kd.patch
+            fi
+          else
+            echo "⚠️ LZ4KD patch not found for kernel version ${{ github.event.inputs.KERNEL_VERSION }}"
+          fi
+          
+          echo "✅ ZRAM enhancements applied successfully"
           
       - name: Configure kernel
         run: |
           cd kernel
+          echo "🔧 Configuring kernel build environment..."
+          
           # Create arch/x86/configs directory if it doesn't exist
           mkdir -p arch/x86/configs
           
-          # Create compiler wrapper script to handle warnings
+          # Set up ccache for faster builds
+          export CCACHE_DIR="${GITHUB_WORKSPACE}/.ccache"
+          mkdir -p "${CCACHE_DIR}"
+          echo "max_size = 5G" > "${CCACHE_DIR}/ccache.conf"
+          
+          # Create advanced compiler wrapper script
+          echo "📝 Creating compiler wrapper..."
           cat > compiler-wrapper.sh << 'EOL'
-          #!/bin/sh
-          exec gcc -Wno-error=cast-function-type \
-                  -Wno-error=format-truncation \
-                  -Wno-error=format \
-                  -Wno-error=missing-prototypes \
-                  "$@"
+          #!/bin/bash
+          
+          # Required compiler versions
+          REQUIRED_GCC_VERSION="13.2.0"
+          REQUIRED_CLANG_VERSION="17.0.0"
+          MIN_GCC_VERSION="11.0.0"
+          MIN_CLANG_VERSION="16.0.0"
+          
+          # Function to compare version numbers
+          version_compare() {
+              if [[ "$1" == "$2" ]]; then
+                  echo "equal"
+                  return
+              fi
+              local IFS=.
+              local i ver1=($1) ver2=($2)
+              for ((i=0; i<${#ver1[@]} || i<${#ver2[@]}; i++)); do
+                  if ((10#${ver1[i]:-0} > 10#${ver2[i]:-0})); then
+                      echo "greater"
+                      return
+                  elif ((10#${ver1[i]:-0} < 10#${ver2[i]:-0})); then
+                      echo "less"
+                      return
+                  fi
+              done
+          }
+          
+          # Function to detect and validate compiler
+          detect_compiler() {
+              local compiler_type="unknown"
+              local version=""
+              
+              # Check for GCC
+              if command -v gcc >/dev/null 2>&1; then
+                  version=$(gcc -dumpversion)
+                  compiler_type="gcc"
+                  if [[ $(version_compare "$version" "$MIN_GCC_VERSION") == "less" ]]; then
+                      echo "❌ Error: GCC version $version is too old. Minimum required: $MIN_GCC_VERSION" >&2
+                      exit 1
+                  fi
+                  if [[ $(version_compare "$version" "$REQUIRED_GCC_VERSION") != "equal" ]]; then
+                      echo "⚠️ Warning: Using GCC $version instead of recommended $REQUIRED_GCC_VERSION" >&2
+                  fi
+              fi
+              
+              # Check for Clang
+              if command -v clang >/dev/null 2>&1; then
+                  local clang_version=$(clang --version | grep -oP "version \K[0-9]+\.[0-9]+\.[0-9]+")
+                  if [[ -n "$clang_version" ]]; then
+                      if [[ "$compiler_type" == "unknown" ]] || 
+                         [[ $(version_compare "$clang_version" "$MIN_CLANG_VERSION") != "less" ]]; then
+                          version=$clang_version
+                          compiler_type="clang"
+                          if [[ $(version_compare "$version" "$REQUIRED_CLANG_VERSION") != "equal" ]]; then
+                              echo "⚠️ Warning: Using Clang $version instead of recommended $REQUIRED_CLANG_VERSION" >&2
+                          fi
+                      fi
+                  fi
+              fi
+              
+              if [[ "$compiler_type" == "unknown" ]]; then
+                  echo "❌ Error: No suitable compiler found. Please install GCC $REQUIRED_GCC_VERSION or Clang $REQUIRED_CLANG_VERSION" >&2
+                  exit 1
+              fi
+              
+              echo "$compiler_type:$version"
+          }
+          
+          # Default compiler flags for warning suppression
+          SUPPRESS_WARNINGS=(
+              -Wno-error=cast-function-type
+              -Wno-error=format-truncation
+              -Wno-error=format
+              -Wno-error=missing-prototypes
+              -Wno-error=unused-but-set-variable
+              -Wno-error=unused-const-variable
+          )
+          
+          # ChromeOS ARCVM specific flags
+          ARCVM_FLAGS=(
+              -mindirect-branch=thunk-extern
+              -mindirect-branch-register
+              -fno-jump-tables
+              -fno-delete-null-pointer-checks
+          )
+          
+          # Detect and validate compiler
+          COMPILER_INFO=$(detect_compiler)
+          COMPILER_TYPE=${COMPILER_INFO%%:*}
+          COMPILER_VERSION=${COMPILER_INFO#*:}
+          
+          # Set up compiler command
+          if command -v ccache >/dev/null 2>&1; then
+              COMPILER="ccache"
+          else
+              COMPILER=""
+          fi
+          
+          case $COMPILER_TYPE in
+              "gcc")
+                  COMPILER="$COMPILER gcc"
+                  # GCC specific flags
+                  EXTRA_FLAGS=(
+                      -fno-strict-aliasing
+                      -fno-common
+                  )
+                  ;;
+              "clang")
+                  COMPILER="$COMPILER clang"
+                  # Clang specific flags
+                  EXTRA_FLAGS=(
+                      -Wno-error=unused-command-line-argument
+                      -Wno-error=implicit-function-declaration
+                  )
+                  ;;
+          esac
+          
+          # Log compiler configuration
+          echo "🔧 Using compiler: $COMPILER_TYPE $COMPILER_VERSION" >&2
+          echo "📍 Compiler path: $(which ${COMPILER##* })" >&2
+          
+          # Execute compiler with all flags
+          exec $COMPILER "${SUPPRESS_WARNINGS[@]}" "${ARCVM_FLAGS[@]}" "${EXTRA_FLAGS[@]}" "$@"
           EOL
           chmod +x compiler-wrapper.sh
+          
+          # Verify wrapper script
+          echo "🔍 Verifying compiler wrapper..."
+          if ! ./compiler-wrapper.sh -v >/dev/null 2>&1; then
+            echo "❌ Compiler wrapper verification failed!"
+            exit 1
+          fi
+          echo "✅ Compiler wrapper created and verified"
+          
+          # Configure environment variables
+          export PATH="$PWD:$PATH"
+          export KBUILD_BUILD_USER="KaliRootSuperUser"
+          export KBUILD_BUILD_HOST="github-runner"
+          export KBUILD_BUILD_VERSION="1"
+          export KBUILD_BUILD_TIMESTAMP="$(date -u)
           
           # Set compiler wrapper
           export HOSTCC="./compiler-wrapper.sh"
